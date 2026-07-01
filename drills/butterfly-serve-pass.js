@@ -67,11 +67,11 @@ const butterflyDrill = {
     // 1) SERVE — over the net to the passer
     ctx.highlight(server, true)
     ctx.move(ball, ctx.passSlots[0].x, ctx.passSlots[0].y - 30)
-    await ctx.draw(900); if (!isRunning()) return
+    await ctx.draw(1450); if (!isRunning()) return
 
     // 2) PASS — to the target at the net
     ctx.move(ball, ctx.targetPos.x, ctx.targetPos.y + 10)
-    await ctx.draw(750); if (!isRunning()) return
+    await ctx.draw(1200); if (!isRunning()) return
 
     // 3) ROTATE — everyone follows their ball (the butterfly)
     ctx.highlight(server, false)
@@ -83,7 +83,7 @@ const butterflyDrill = {
     ctx.move(nextServer, ctx.serveSlots[0].x, ctx.serveSlots[0].y) // next up to serve
     ctx.move(nextPasser, ctx.passSlots[0].x, ctx.passSlots[0].y)   // next up to pass
     ctx.move(ball, ctx.serveSlots[0].x + 35, ctx.serveSlots[0].y)  // ball shagged to next server
-    await ctx.draw(1050); if (!isRunning()) return
+    await ctx.draw(1750); if (!isRunning()) return
 
     // commit the rotation
     ctx.serveLine = [nextServer, target]
