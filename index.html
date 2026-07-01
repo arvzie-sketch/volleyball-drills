@@ -7,46 +7,71 @@
   <style>
     :root { --glass: rgba(255,255,255,0.08); --line: rgba(255,255,255,0.18); }
     * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
       margin: 0; min-height: 100vh; color: #eef3f6;
       font-family: 'Segoe UI', system-ui, sans-serif;
       background: radial-gradient(1200px 600px at 20% -10%, #2b6c7d 0%, #16323b 55%, #0d1f25 100%);
     }
-    header { padding: 28px 32px 8px; }
-    header h1 { margin: 0; font-size: 1.5rem; font-weight: 650; letter-spacing: .2px; }
-    header p { margin: 6px 0 0; color: #9fc0cc; max-width: 720px; }
-    .wrap {
-      display: flex; flex-wrap: wrap; gap: 28px; padding: 20px 32px 48px; align-items: flex-start;
-    }
+
+    /* ---------- mobile-first (single column) ---------- */
+    header { padding: 18px 16px 4px; }
+    header h1 { margin: 0; font-size: 1.15rem; font-weight: 650; line-height: 1.25; letter-spacing: .2px; }
+    header p { margin: 6px 0 0; color: #9fc0cc; font-size: .9rem; }
+
+    .wrap { display: flex; flex-direction: column; gap: 16px; padding: 14px 16px 36px; }
     .card {
-      background: var(--glass); border: 1px solid var(--line); border-radius: 18px;
+      background: var(--glass); border: 1px solid var(--line); border-radius: 16px;
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 40px rgba(0,0,0,.28);
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
     }
-    .court-card { padding: 18px; }
+
+    .court-card { padding: 12px; width: 100%; max-width: 520px; margin: 0 auto; }
     #court { line-height: 0; }
-    .controls { display: flex; gap: 10px; margin-top: 16px; }
+    #court svg { display: block; width: 100%; height: auto; max-height: 74vh; margin: 0 auto; }
+
+    .controls { display: flex; gap: 10px; margin-top: 12px; }
     button {
-      flex: 1; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
-      background: rgba(255,255,255,0.10); color: #eef3f6; font-size: .92rem; font-weight: 600;
-      cursor: pointer; transition: transform .06s ease, background .15s ease;
+      flex: 1; min-height: 46px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
+      background: rgba(255,255,255,0.10); color: #eef3f6; font-size: 1rem; font-weight: 600;
+      cursor: pointer; touch-action: manipulation; transition: transform .06s ease, background .15s ease;
     }
     button:hover { background: rgba(255,255,255,0.18); }
     button:active { transform: translateY(1px); }
     button.primary { background: #2fae7a; border-color: #2fae7a; }
     button.primary:hover { background: #33c489; }
     button:disabled { opacity: .45; cursor: default; }
-    .info { padding: 22px 24px; max-width: 440px; }
-    .info h2 { margin: 0 0 4px; font-size: 1.05rem; }
-    .info .sub { color: #9fc0cc; font-size: .9rem; margin: 0 0 16px; }
-    ol { margin: 0; padding-left: 20px; }
-    ol li { margin: 8px 0; color: #dbe7ec; font-size: .92rem; }
-    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
-    .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .85rem; color: #cfe0e6; }
-    .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #f5f5f5; }
-    .status { margin-top: 14px; font-size: .82rem; color: #8fb4c0; }
-    footer { padding: 0 32px 28px; color: #7fa0ac; font-size: .8rem; }
+
+    .info { padding: 16px 18px; width: 100%; max-width: 520px; margin: 0 auto; }
+    .info h2 { margin: 0 0 4px; font-size: 1.02rem; }
+    .info .sub { color: #9fc0cc; font-size: .88rem; margin: 0 0 14px; }
+    ol { margin: 0; padding-left: 18px; }
+    ol li { margin: 7px 0; color: #dbe7ec; font-size: .9rem; }
+    .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: #cfe0e6; }
+    .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #f5f5f5; flex: 0 0 auto; }
+    .status { margin-top: 12px; font-size: .8rem; color: #8fb4c0; }
+    footer { padding: 0 16px 24px; color: #7fa0ac; font-size: .78rem; }
     footer a { color: #9fd0dd; }
+
+    /* ---------- wide screens (court + info side by side) ---------- */
+    @media (min-width: 880px) {
+      header { padding: 28px 32px 8px; }
+      header h1 { font-size: 1.5rem; }
+      header p { max-width: 720px; }
+      .wrap { flex-direction: row; flex-wrap: wrap; gap: 28px; padding: 20px 32px 48px; align-items: flex-start; }
+      .court-card { width: 460px; max-width: 460px; padding: 18px; margin: 0; }
+      #court svg { max-height: none; }
+      .info { width: auto; max-width: 440px; margin: 0; padding: 22px 24px; }
+    }
+
+    /* ---------- short landscape (e.g. phone turned sideways) ---------- */
+    @media (orientation: landscape) and (max-height: 600px) {
+      .wrap { flex-direction: row; align-items: flex-start; gap: 16px; }
+      .court-card { width: auto; max-width: none; margin: 0; }
+      #court svg { width: auto; height: 82vh; max-height: 82vh; }
+      .info { margin: 0; }
+    }
   </style>
 </head>
 <body>

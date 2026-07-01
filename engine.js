@@ -84,7 +84,16 @@ class DrillPlayer {
   async build () {
     clearChildren(this.mountEl)
     const court = new VBFullCourt({ width: this.courtWidth, colours: this.courtColours })
-    this.mountEl.appendChild(court.getSVG())
+
+    // Make the SVG fluid: give it a viewBox matching its drawn size and let CSS
+    // control the rendered width, so it scales to any screen (mobile-first).
+    const svgEl = court.getSVG()
+    svgEl.setAttribute('viewBox', '0 0 ' + court.svg.width + ' ' + court.svg.height)
+    svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet')
+    svgEl.removeAttribute('width')
+    svgEl.removeAttribute('height')
+    this.mountEl.appendChild(svgEl)
+
     this.ctx = new DrillContext(court)
     this.drill.setup(this.ctx)
     await court.draw(0)
