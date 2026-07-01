@@ -42,6 +42,18 @@
     button.primary:hover { background: #33c489; }
     button:disabled { opacity: .45; cursor: default; }
 
+    .picker { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .picker-label { flex: 0 0 auto; font-size: .74rem; font-weight: 700; letter-spacing: .6px;
+      text-transform: uppercase; color: #9fc0cc; }
+    #drillSelect {
+      flex: 1; min-height: 44px; padding: 8px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.10); color: #eef3f6;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    #drillSelect:focus { outline: 2px solid #2fae7a; outline-offset: 1px; }
+    /* the open dropdown list uses the OS palette — force readable dark-on-light */
+    #drillSelect option, #drillSelect optgroup { color: #12252b; background: #eef3f6; }
+
     .info { padding: 16px 18px; width: 100%; max-width: 520px; margin: 0 auto; }
     .info h2 { margin: 0 0 4px; font-size: 1.02rem; }
     .info .sub { color: #9fc0cc; font-size: .88rem; margin: 0 0 14px; }
@@ -76,13 +88,17 @@
 </head>
 <body>
   <header>
-    <h1>Volleyball Drills — Wash: Serve-Receive → Transition → Attack</h1>
-    <p>A continuous transition drill rendered with the VBRotations engine. Serve target and
-       finishing attacker are randomised each repetition, and hitters cycle through a sideline queue.</p>
+    <h1>Volleyball Drills</h1>
+    <p>An animated library of volleyball drills, rendered with the VBRotations engine.
+       Pick a drill to watch it play out on the court.</p>
   </header>
 
   <div class="wrap">
     <div class="card court-card">
+      <label class="picker">
+        <span class="picker-label">Drill</span>
+        <select id="drillSelect" aria-label="Choose a drill"></select>
+      </label>
       <div id="court"></div>
       <div class="controls">
         <button id="playBtn" class="primary">▶ Play</button>
@@ -95,13 +111,7 @@
       <h2 id="drillName"></h2>
       <p class="sub" id="drillSummary"></p>
       <ol id="phaseList"></ol>
-      <div class="legend">
-        <span><span class="dot" style="background:#efa581"></span>Attacker / Setter</span>
-        <span><span class="dot" style="background:#e23b2b"></span>Receiver</span>
-        <span><span class="dot" style="background:#3b5bdb"></span>Server</span>
-        <span><span class="dot" style="background:#66dd66"></span>Chosen hitter</span>
-        <span><span class="dot" style="background:#fffb00"></span>Ball</span>
-      </div>
+      <div class="legend" id="legend"></div>
       <div class="status" id="status">Loading…</div>
     </div>
   </div>
@@ -115,24 +125,52 @@
   <script src="vendor/vbCourts.js"></script>
   <script src="engine.js"></script>
   <script src="drills/wash-attack-block.js"></script>
+  <script src="drills/block-close-pin.js"></script>
   <script>
-    const drill = washAttackBlockDrill
     const statusEl = document.getElementById('status')
     const playBtn = document.getElementById('playBtn')
     const stepBtn = document.getElementById('stepBtn')
     const resetBtn = document.getElementById('resetBtn')
+    const selectEl = document.getElementById('drillSelect')
 
-    // populate the info panel
-    document.getElementById('drillName').textContent = drill.name
-    document.getElementById('drillSummary').textContent = drill.summary
-    const list = document.getElementById('phaseList')
-    drill.phases.forEach(function (t) {
-      const li = document.createElement('li'); li.textContent = t; list.appendChild(li)
+    // Build the grouped dropdown from the drill registry (optgroup per category)
+    drillCategories().forEach(function (cat) {
+      const group = document.createElement('optgroup')
+      group.label = cat.name
+      cat.drills.forEach(function (d) {
+        const opt = document.createElement('option')
+        opt.value = d.id
+        opt.textContent = d.name
+        group.appendChild(opt)
+      })
+      selectEl.appendChild(group)
     })
+
+    const BALL_LEGEND = { c: '#fffb00', t: 'Ball' }
+
+    function renderInfo (drill) {
+      document.getElementById('drillName').textContent = drill.name
+      document.getElementById('drillSummary').textContent = drill.summary
+      const list = document.getElementById('phaseList')
+      list.innerHTML = ''
+      drill.phases.forEach(function (t) {
+        const li = document.createElement('li'); li.textContent = t; list.appendChild(li)
+      })
+      const legend = document.getElementById('legend')
+      legend.innerHTML = ''
+      const entries = (drill.legend || []).concat([BALL_LEGEND])
+      entries.forEach(function (e) {
+        const span = document.createElement('span')
+        const dot = document.createElement('span')
+        dot.className = 'dot'; dot.style.background = e.c
+        span.appendChild(dot)
+        span.appendChild(document.createTextNode(e.t))
+        legend.appendChild(span)
+      })
+    }
 
     const runner = new DrillPlayer({
       mountEl: document.getElementById('court'),
-      drill: drill,
       courtWidth: 460,
       courtColours: { backgroundColour: '#2f7f8f', courtColour: '#e08444', lineColour: '#ffffff' },
       onState: function (state) {
@@ -143,14 +181,38 @@
       }
     })
 
+    let current = null
+
+    async function selectDrill (id, updateHash) {
+      const drill = getDrill(id) || DRILLS[0]
+      if (!drill) return
+      current = drill
+      selectEl.value = drill.id
+      renderInfo(drill)
+      if (updateHash && location.hash.slice(1) !== drill.id) {
+        history.replaceState(null, '', '#' + drill.id)
+      }
+      await runner.load(drill)
+    }
+
     playBtn.addEventListener('click', function () {
       if (runner.running) runner.pause()
       else runner.play()
     })
     stepBtn.addEventListener('click', function () { runner.step() })
     resetBtn.addEventListener('click', function () { runner.reset() })
+    selectEl.addEventListener('change', function () { selectDrill(selectEl.value, true) })
 
-    window.addEventListener('load', function () { runner.build() })
+    // deep-linking: #<drill-id> selects that drill; back/forward & shared links work
+    window.addEventListener('hashchange', function () {
+      const id = location.hash.slice(1)
+      if (id && (!current || id !== current.id)) selectDrill(id, false)
+    })
+
+    window.addEventListener('load', function () {
+      const fromHash = location.hash.slice(1)
+      selectDrill(getDrill(fromHash) ? fromHash : (DRILLS[0] && DRILLS[0].id), true)
+    })
   </script>
 </body>
 </html>

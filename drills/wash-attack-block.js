@@ -34,7 +34,15 @@ const P = {
 }
 
 const washAttackBlockDrill = {
+  id: 'wash-attack-block',        // stable, used in the URL hash (#wash-attack-block)
+  category: 'Attack',             // which library it appears under in the picker
   name: 'Wash: serve-receive → transition → attack',
+  legend: [
+    { c: '#efa581', t: 'Attacker / Setter' },
+    { c: '#e23b2b', t: 'Receiver' },
+    { c: '#3b5bdb', t: 'Server' },
+    { c: '#66dd66', t: 'Chosen hitter' }
+  ],
   summary: 'Server feeds an attack-like serve; the front row fake-blocks, ' +
            'transitions off the net, the setter runs to target, and one random ' +
            'attacker finishes. Hitter rotates to the sub line. Repeat.',
@@ -142,3 +150,5 @@ const washAttackBlockDrill = {
     await ctx.draw(400)
   }
 }
+
+registerDrill(washAttackBlockDrill)

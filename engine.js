@@ -128,4 +128,38 @@ class DrillPlayer {
     await this.drill.reset(this.ctx)
     this.onState('ready')
   }
+
+  // Swap in a different drill: stop, let the current rep settle, rebuild.
+  async load (drill) {
+    this.pause()
+    await this.repPromise
+    this.drill = drill
+    await this.build()
+  }
+}
+
+/* -------------------------------------------------------------------------
+ * Drill registry — each drill file calls registerDrill(...). Drills declare
+ * an `id` (stable, URL-friendly) and a `category` (used to group the picker).
+ * ---------------------------------------------------------------------- */
+const DRILLS = []
+
+function registerDrill (drill) {
+  DRILLS.push(drill)
+  return drill
+}
+
+function getDrill (id) {
+  return DRILLS.find(d => d.id === id)
+}
+
+// [{ name, drills: [...] }, ...] preserving first-seen order
+function drillCategories () {
+  const cats = []
+  for (const d of DRILLS) {
+    let c = cats.find(x => x.name === d.category)
+    if (!c) { c = { name: d.category, drills: [] }; cats.push(c) }
+    c.drills.push(d)
+  }
+  return cats
 }
