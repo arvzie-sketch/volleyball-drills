@@ -13,8 +13,8 @@ const BP = {
   blockerHome: { x: 450, y: 60 },          // middle blocker, zone 3 at the net
   closeLeft:   { x: 175, y: 55 },          // closed block position, left pin
   closeRight:  { x: 735, y: 55 },          // closed block position, right pin
-  blockPtLeft:  { x: 175, y: 10 },         // where the ball is stopped, at the net
-  blockPtRight: { x: 735, y: 10 },
+  blockPtLeft:  { x: 175, y: -5 },         // ball stopped just over the net by the block
+  blockPtRight: { x: 735, y: -5 },
 
   setter:       { x: 560, y: -120 },       // far-side setter
   ballHome:     { x: 590, y: -120 },       // ball in the setter's hands
@@ -43,9 +43,9 @@ const blockClosePinDrill = {
            'Ball is stuffed back; reset and repeat to the other side.',
   phases: [
     'Set — the far-side setter delivers to the left or right pin (random)',
-    'Approach — the far-side hitter arrives at the pin to meet the ball',
-    'Close — the middle blocker shuffles to the pin and seals the block at the net',
-    'Stuff — the block stops the ball and it drops on the attacker’s side',
+    'Follow — the blocker tracks the ball across the net with little delay',
+    'Block — the block is up as the hitter contacts; near-instant at the net',
+    'Stuff — the ball rebounds straight back down on the attacker’s side',
     'Reset — blocker returns to the middle, repeat to the other pin'
   ],
 
@@ -70,21 +70,27 @@ const blockClosePinDrill = {
     const close = side === 'left' ? BP.closeLeft : BP.closeRight
     const blockPt = side === 'left' ? BP.blockPtLeft : BP.blockPtRight
 
-    // 1) SET to the pin; the hitter approaches to meet it (same draw = converge)
-    ctx.move(ball, pin.x, pin.y - 10)
-    ctx.move(o.atk, pin.x, pin.y)
-    await ctx.draw(900); if (!isRunning()) return
-
-    // 2) CLOSE — blocker seals the pin as the ball reaches the net (same draw)
+    // 1a) READ — the setter releases toward the pin; the blocker reads the set
     ctx.highlight(o.blocker, true)
-    ctx.move(o.blocker, close.x, close.y)
-    ctx.move(ball, blockPt.x, blockPt.y)
-    await ctx.draw(600); if (!isRunning()) return
+    ctx.move(ball, (BP.ballHome.x + pin.x) / 2, (BP.ballHome.y + pin.y) / 2)
+    await ctx.draw(170); if (!isRunning()) return
 
-    // 3) STUFF — ball deflects back down to the attacker's side
+    // 1b) FOLLOW — ball finishes to the pin while the blocker follows it across
+    //     the net with little delay and the hitter arrives, so the block is up
+    //     the instant the hitter contacts the ball
+    ctx.move(ball, pin.x, pin.y)
+    ctx.move(o.atk, pin.x, pin.y + 8)
+    ctx.move(o.blocker, close.x, close.y)
+    await ctx.draw(560); if (!isRunning()) return
+
+    // 2) HIT into the block — near-instant, everything is right at the net
+    ctx.move(ball, blockPt.x, blockPt.y)
+    await ctx.draw(140); if (!isRunning()) return
+
+    // 3) STUFF — the block rebounds the ball straight back down, near-instant
     const s = BP.stuff(side)
     ctx.move(ball, s.x, s.y)
-    await ctx.draw(500); if (!isRunning()) return
+    await ctx.draw(230); if (!isRunning()) return
 
     // 4) RESET
     ctx.highlight(o.blocker, false)
