@@ -32,14 +32,22 @@ random set + attack → substitution → repeat.
 
 ## Adding a drill (this is how the attack / block libraries grow)
 
-A drill is one file exposing an object with five hooks. The runner handles the
-court, the play/pause/step/reset loop, and the UI.
+A drill is one file exposing an object, which it registers with `registerDrill(...)`.
+The `category` groups it in the picker; the `id` is its shareable URL hash
+(`.../#my-drill`). The runner handles the court, the play/pause/step/reset loop,
+selection, deep-linking, and the UI.
 
 ```js
 const myDrill = {
+  id: 'cross-court-block-read',               // URL hash: .../#cross-court-block-read
+  category: 'Block',                          // picker group (Attack, Block, ...)
   name: 'Cross-court block read',
   summary: 'One line shown in the info panel.',
-  phases: ['Step 1 …', 'Step 2 …'],          // bullet list in the UI
+  phases: ['Step 1 …', 'Step 2 …'],           // bullet list in the UI
+  legend: [                                   // colour key (Ball is added automatically)
+    { c: '#efa581', t: 'Blocker' },
+    { c: '#3b5bdb', t: 'Attacker' }
+  ],
 
   setup (ctx) {                               // add players first, ball LAST
     ctx.player('blocker', 760, 80, 'B')       // (name, x, y, label)
@@ -58,7 +66,13 @@ const myDrill = {
   },
   async reset (ctx) { /* move objects home, await ctx.draw(400) */ }
 }
+
+registerDrill(myDrill)                         // <-- makes it appear in the picker
 ```
+
+Then add one line to `index.html` — a `<script src="drills/your-file.js">` tag after
+the other drill scripts. That's it: it shows up in the dropdown under its category
+and gets its own shareable `#id` link. No new pages, no duplicated layout.
 
 ### Coordinate system (full court)
 
@@ -80,12 +94,15 @@ the opponent. `100 units ≈ 1 metre`.
 
 ```
 drills/
-  attack/   spike-approach, tempo-timing, back-row-attack, ...
-  block/    close-the-block, read-block, commit-vs-read, ...
+  wash-attack-block.js   category: Attack   (#wash-attack-block)
+  block-close-pin.js     category: Block    (#block-close-pin)
+  ...
 ```
 
-Register a drill in `index.html` by pointing the last `<script src>` at its file
-(a drill picker / menu is the natural next step).
+Drills are grouped in the picker by their `category`, so the **Attack** and **Block**
+libraries are just drills that declare `category: 'Attack'` / `category: 'Block'`.
+Each also gets a shareable deep link, e.g.
+`https://arvzie-sketch.github.io/volleyball-drills/#block-close-pin`.
 
 ## Notes & limits
 
