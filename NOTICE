@@ -1,0 +1,14 @@
+Volleyball Drills
+Copyright 2026 arvzie-sketch
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product bundles and builds upon the following Apache-2.0 licensed works:
+
+- VBRotations  (vendor/vbCourts.js)
+  Copyright monkeysppp
+  https://github.com/monkeysppp/VBRotations
+
+- Snap.svg  (vendor/snap.svg-min.js)
+  Copyright 2013 Adobe Systems Incorporated
+  http://snapsvg.io/
