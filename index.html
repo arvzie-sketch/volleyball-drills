@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Volleyball Drills — Wash Attack/Block</title>
+  <title>Volleyball Drills</title>
   <style>
     :root { --glass: rgba(255,255,255,0.08); --line: rgba(255,255,255,0.18); }
     * { box-sizing: border-box; }
@@ -42,17 +42,46 @@
     button.primary:hover { background: #33c489; }
     button:disabled { opacity: .45; cursor: default; }
 
-    .picker { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .picker-label { flex: 0 0 auto; font-size: .74rem; font-weight: 700; letter-spacing: .6px;
-      text-transform: uppercase; color: #9fc0cc; }
-    #drillSelect {
-      flex: 1; min-height: 44px; padding: 8px 12px; border-radius: 10px;
+    /* drill picker trigger (opens the browser sheet) */
+    .drill-picker { display: flex; align-items: center; gap: 10px; width: 100%;
+      min-height: 48px; margin-bottom: 12px; padding: 8px 14px; border-radius: 12px;
       border: 1px solid var(--line); background: rgba(255,255,255,0.10); color: #eef3f6;
-      font-size: 1rem; font-weight: 600; cursor: pointer;
-    }
-    #drillSelect:focus { outline: 2px solid #2fae7a; outline-offset: 1px; }
-    /* the open dropdown list uses the OS palette — force readable dark-on-light */
-    #drillSelect option, #drillSelect optgroup { color: #12252b; background: #eef3f6; }
+      cursor: pointer; text-align: left; }
+    .drill-picker:hover { background: rgba(255,255,255,0.16); }
+    .dp-label { flex: 0 0 auto; font-size: .7rem; font-weight: 700; letter-spacing: .6px;
+      text-transform: uppercase; color: #9fc0cc; }
+    .dp-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; font-weight: 600; font-size: 1rem; }
+    .dp-caret { flex: 0 0 auto; color: #9fc0cc; font-size: .8rem; }
+
+    /* drill browser — bottom sheet on mobile, dialog on desktop */
+    .sheet-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.55);
+      display: flex; align-items: flex-end; justify-content: center; }
+    .sheet-backdrop[hidden] { display: none; }
+    .sheet { display: flex; flex-direction: column; width: 100%; max-height: 82vh;
+      background: #15323b; border: 1px solid var(--line); border-radius: 18px 18px 0 0;
+      box-shadow: 0 -12px 40px rgba(0,0,0,.45); animation: sheetUp .18s ease-out; }
+    @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes sheetIn { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .sheet-head { display: flex; gap: 10px; padding: 14px; border-bottom: 1px solid var(--line); }
+    #drillSearch { flex: 1; min-width: 0; min-height: 44px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.08); color: #eef3f6; font-size: 1rem; }
+    #drillSearch:focus { outline: 2px solid #2fae7a; outline-offset: 1px; }
+    #sheetClose { flex: 0 0 auto; width: 44px; min-height: 44px; padding: 0; border-radius: 10px;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.08); color: #eef3f6;
+      font-size: 1.1rem; cursor: pointer; }
+    .sheet-list { overflow-y: auto; padding: 6px 8px 16px; -webkit-overflow-scrolling: touch; }
+    .sheet-cat { position: sticky; top: 0; padding: 12px 12px 6px; background: #15323b;
+      font-size: .7rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #7fb0bf; }
+    .sheet-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+      min-height: 48px; padding: 11px 12px; border: none; border-radius: 12px; background: transparent;
+      color: #eef3f6; font-size: 1rem; font-weight: 500; cursor: pointer; }
+    .sheet-row:hover { background: rgba(255,255,255,0.06); }
+    .sheet-row.active { background: rgba(47,174,122,.18); }
+    .sheet-row .rname { flex: 1 1 auto; min-width: 0; }
+    .sheet-row .check { flex: 0 0 auto; color: #2fae7a; opacity: 0; }
+    .sheet-row.active .check { opacity: 1; }
+    .sheet-empty { padding: 26px 12px; text-align: center; color: #9fc0cc; }
 
     .info { padding: 16px 18px; width: 100%; max-width: 520px; margin: 0 auto; }
     .info h2 { margin: 0 0 4px; font-size: 1.02rem; }
@@ -75,6 +104,9 @@
       .court-card { width: 460px; max-width: 460px; padding: 18px; margin: 0; }
       #court svg { max-height: none; }
       .info { width: auto; max-width: 440px; margin: 0; padding: 22px 24px; }
+      /* centered dialog instead of a bottom sheet */
+      .sheet-backdrop { align-items: center; }
+      .sheet { max-width: 520px; max-height: 70vh; border-radius: 18px; animation: sheetIn .16s ease-out; }
     }
 
     /* ---------- short landscape (e.g. phone turned sideways) ---------- */
@@ -95,10 +127,11 @@
 
   <div class="wrap">
     <div class="card court-card">
-      <label class="picker">
-        <span class="picker-label">Drill</span>
-        <select id="drillSelect" aria-label="Choose a drill"></select>
-      </label>
+      <button id="drillPicker" class="drill-picker" aria-haspopup="dialog">
+        <span class="dp-label">Drill</span>
+        <span class="dp-name" id="dpName">Choose a drill…</span>
+        <span class="dp-caret">▾</span>
+      </button>
       <div id="court"></div>
       <div class="controls">
         <button id="playBtn" class="primary">▶ Play</button>
@@ -121,6 +154,16 @@
     (Apache-2.0). Drill choreography and runner added on top.
   </footer>
 
+  <div class="sheet-backdrop" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Choose a drill">
+    <div class="sheet">
+      <div class="sheet-head">
+        <input id="drillSearch" type="search" placeholder="Search drills…" autocomplete="off" aria-label="Search drills">
+        <button id="sheetClose" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-list" id="sheetList"></div>
+    </div>
+  </div>
+
   <script src="vendor/snap.svg-min.js"></script>
   <script src="vendor/vbCourts.js"></script>
   <script src="engine.js"></script>
@@ -132,20 +175,15 @@
     const playBtn = document.getElementById('playBtn')
     const stepBtn = document.getElementById('stepBtn')
     const resetBtn = document.getElementById('resetBtn')
-    const selectEl = document.getElementById('drillSelect')
 
-    // Build the grouped dropdown from the drill registry (optgroup per category)
-    drillCategories().forEach(function (cat) {
-      const group = document.createElement('optgroup')
-      group.label = cat.name
-      cat.drills.forEach(function (d) {
-        const opt = document.createElement('option')
-        opt.value = d.id
-        opt.textContent = d.name
-        group.appendChild(opt)
-      })
-      selectEl.appendChild(group)
-    })
+    const pickerBtn = document.getElementById('drillPicker')
+    const dpName = document.getElementById('dpName')
+    const sheet = document.getElementById('sheet')
+    const sheetList = document.getElementById('sheetList')
+    const searchInput = document.getElementById('drillSearch')
+    const sheetClose = document.getElementById('sheetClose')
+
+    let current = null
 
     const BALL_LEGEND = { c: '#fffb00', t: 'Ball' }
 
@@ -170,6 +208,56 @@
       })
     }
 
+    // ---- drill browser (searchable, categorised) ----
+    function renderList (filter) {
+      const q = (filter || '').trim().toLowerCase()
+      sheetList.innerHTML = ''
+      let shown = 0
+      drillCategories().forEach(function (cat) {
+        const matches = cat.drills.filter(function (d) {
+          return !q || d.name.toLowerCase().indexOf(q) !== -1 || cat.name.toLowerCase().indexOf(q) !== -1
+        })
+        if (!matches.length) return
+        const head = document.createElement('div')
+        head.className = 'sheet-cat'; head.textContent = cat.name
+        sheetList.appendChild(head)
+        matches.forEach(function (d) {
+          shown++
+          const row = document.createElement('button')
+          row.className = 'sheet-row' + (current && d.id === current.id ? ' active' : '')
+          const name = document.createElement('span'); name.className = 'rname'; name.textContent = d.name
+          const check = document.createElement('span'); check.className = 'check'; check.textContent = '✓'
+          row.appendChild(name); row.appendChild(check)
+          row.addEventListener('click', function () { closeSheet(); selectDrill(d.id, true) })
+          sheetList.appendChild(row)
+        })
+      })
+      if (!shown) {
+        const empty = document.createElement('div')
+        empty.className = 'sheet-empty'
+        empty.textContent = 'No drills match “' + filter + '”.'
+        sheetList.appendChild(empty)
+      }
+    }
+
+    function openSheet () {
+      searchInput.value = ''
+      renderList('')
+      sheet.hidden = false
+      document.body.style.overflow = 'hidden'
+      setTimeout(function () { searchInput.focus() }, 40)
+    }
+    function closeSheet () {
+      sheet.hidden = true
+      document.body.style.overflow = ''
+    }
+
+    pickerBtn.addEventListener('click', openSheet)
+    sheetClose.addEventListener('click', closeSheet)
+    sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet() })
+    searchInput.addEventListener('input', function () { renderList(searchInput.value) })
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet() })
+
     const runner = new DrillPlayer({
       mountEl: document.getElementById('court'),
       courtWidth: 460,
@@ -182,13 +270,11 @@
       }
     })
 
-    let current = null
-
     async function selectDrill (id, updateHash) {
       const drill = getDrill(id) || DRILLS[0]
       if (!drill) return
       current = drill
-      selectEl.value = drill.id
+      dpName.textContent = drill.name
       renderInfo(drill)
       if (updateHash && location.hash.slice(1) !== drill.id) {
         history.replaceState(null, '', '#' + drill.id)
@@ -202,7 +288,6 @@
     })
     stepBtn.addEventListener('click', function () { runner.step() })
     resetBtn.addEventListener('click', function () { runner.reset() })
-    selectEl.addEventListener('change', function () { selectDrill(selectEl.value, true) })
 
     // deep-linking: #<drill-id> selects that drill; back/forward & shared links work
     window.addEventListener('hashchange', function () {
