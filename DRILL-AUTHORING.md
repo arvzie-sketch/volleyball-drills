@@ -68,11 +68,18 @@ registerDrill({
    what makes pause/reset/drill-switching safe.
 3. **Absolute moves only** (`ctx.move` sets a target position). Never mutate
    the DOM/SVG directly; use `ctx.tint` / `ctx.highlight` for emphasis.
-4. **Ball last in setup**, so it paints above players.
-5. Randomness is fine (`ctx.pick`, `ctx.pickIndex`) — vary targets per rep.
-6. Timings: 600–1500 ms for a ball flight or player run; ≤250 ms for contacts
+4. **Don't mix `ctx.tint` and `ctx.highlight` on the same object.**
+   `toggleHighlight()` (in `vendor/vbCourts.js`) always resets fill to the
+   player's *default* colour on un-highlight — it knows nothing about a
+   custom tint, so the tint gets silently wiped the first time that object
+   is un-highlighted. If a tinted role (e.g. a team-colour player) also
+   needs a temporary "active" flash, toggle it with two `ctx.tint()` calls
+   (tint colour ↔ flash colour) instead of `ctx.highlight()`.
+5. **Ball last in setup**, so it paints above players.
+6. Randomness is fine (`ctx.pick`, `ctx.pickIndex`) — vary targets per rep.
+7. Timings: 600–1500 ms for a ball flight or player run; ≤250 ms for contacts
    at the net. The user can scale speed; don't hard-code delays outside draw().
-7. Legend colours — stay in this palette so drills look consistent:
+8. Legend colours — stay in this palette so drills look consistent:
    `#efa581` (neutral player), `#e23b2b` (red team role), `#3b5bdb` (blue team
    role), `#5b7fb5` (secondary blue), `#66dd66` (highlighted/active player).
 
