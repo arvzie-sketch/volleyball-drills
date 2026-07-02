@@ -73,6 +73,8 @@ class VBCourt {
       this.drawingPromise = Promise.all(elementsDrawn)
       this.drawingPromise.then(() => {
         this.drawing = false
+      }, () => {
+        this.drawing = false
       })
     }
     return this.drawingPromise
@@ -220,14 +222,45 @@ class CourtObject {
   }
 
   draw (time) {
-    if (this.movePending) {
-      return new Promise((resolve, reject) => {
-        this.courtObject.animate({ transform:`translate(${this.pos.x}, ${this.pos.y})`}, time, null, resolve)
-      })
-    } else {
-      this.courtObject.transform(`translate(${this.pos.x}, ${this.pos.y})`)
+    // Replaced Snap.animate with a self-contained rAF tween: Snap drops its
+    // completion callback when animations interleave (promise never settles,
+    // freezing every await chained on court.draw) and can throw inside its
+    // eve dispatcher. This tween ALWAYS settles and cancels cleanly.
+    const el = this.courtObject
+    if (!el) return Promise.resolve()
+    if (this._tweenCancel) this._tweenCancel() // supersede in-flight motion
+    const target = { x: this.pos.x, y: this.pos.y }
+    const from = this._xy || target
+    if (!this.movePending || !time || time <= 0 || (from.x === target.x && from.y === target.y)) {
+      this._xy = target
+      el.transform(`translate(${target.x}, ${target.y})`)
       return Promise.resolve()
     }
+    return new Promise((resolve) => {
+      let raf = null
+      const t0 = performance.now()
+      const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / time)
+        const e = ease(k)
+        const x = from.x + (target.x - from.x) * e
+        const y = from.y + (target.y - from.y) * e
+        this._xy = { x: x, y: y }
+        el.transform(`translate(${x}, ${y})`)
+        if (k < 1) {
+          raf = requestAnimationFrame(tick)
+        } else {
+          this._tweenCancel = null
+          resolve()
+        }
+      }
+      this._tweenCancel = () => {
+        if (raf) cancelAnimationFrame(raf)
+        this._tweenCancel = null
+        resolve()
+      }
+      raf = requestAnimationFrame(tick)
+    })
   }
 }
 

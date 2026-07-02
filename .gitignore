@@ -5,3 +5,6 @@ desktop.ini
 *.log
 .vscode/
 .idea/
+
+# Design handoff bundle (reference only; its contents are copied into the repo)
+design_handoff_drill_viewer_1c/

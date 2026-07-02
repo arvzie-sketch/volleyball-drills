@@ -8,71 +8,80 @@ Animated volleyball drills rendered on top of the
 Just open `index.html` in a browser — everything is plain `<script>` tags, so it
 works straight from the filesystem (`file://`), no server or build step needed.
 
-- **Play / Pause** — run the drill continuously
-- **Step** — play exactly one repetition
-- **Reset** — snap everyone back to the starting layout
+The viewer is a dark, mobile-first single screen with a court stage and a
+transport bar overlaid on the bottom of the court:
+
+- **▶ / ⏸ Play / Pause** — run the drill continuously
+- **⏭ / ⏮ Step** — jump forward or back **one phase** at a time (⏮ animates the
+  rewind; the engine snapshots every position at each phase boundary)
+- **↺ Reset** — snap everyone back to the starting layout
+- **Speed** — `.5× / 1× / 2×` scales the whole animation
+- **Phase stepper + on-court ticker** — highlight the phase currently playing
+- **⚙ Display settings** — accent colour, court style (Midnight / Classic sand),
+  and a phase-ticker toggle, all saved on the device
+
+Pick a drill from the left rail (desktop) or the drill button that opens a
+bottom sheet (mobile); both lists are searchable and grouped by category.
 
 ## What's here
 
 ```
-index.html                     page + controls + info panel
-engine.js                      generic drill runner (DrillPlayer + DrillContext)
-drills/wash-attack-block.js    the first drill
-vendor/                        VBRotations (snap.svg + vbCourts.js), unmodified
+index.html                     viewer shell — layout, picker, transport, settings (data-driven)
+engine.js                      DrillPlayer + DrillContext: playback, phase stepping, snapshots, registry
+drills/wash-attack-block.js    Attack drill
+drills/block-close-pin.js      Block drill
+drills/butterfly-serve-pass.js Serve & Pass drill
+vendor/vbCourts.js             VBRotations court renderer (patched: rAF tween replaces Snap.animate)
+vendor/snap.svg-min.js         Snap.svg (unmodified)
+DRILL-AUTHORING.md             the drill contract — read before writing a new drill
 ```
-
-## The first drill — "Wash: serve-receive → transition → attack"
-
-Continuous transition drill. Each repetition the **serve target** (R5/R6) and the
-**finishing attacker** are random, and the hitter rotates to a sideline queue while a
-fresh player fills in.
-
-Phases: serve → fake block → transition off the net → setter release → pass →
-random set + attack → substitution → repeat.
 
 ## Adding a drill (this is how the attack / block libraries grow)
 
-A drill is one file exposing an object, which it registers with `registerDrill(...)`.
-The `category` groups it in the picker; the `id` is its shareable URL hash
-(`.../#my-drill`). The runner handles the court, the play/pause/step/reset loop,
-selection, deep-linking, and the UI.
+A drill is **one file** that registers itself with `registerDrill(...)`, plus
+**one `<script>` tag** in `index.html`. No layout, CSS, or engine changes — the
+whole UI is data-driven from the drill descriptor. The `category` groups it in
+the picker; the `id` is its shareable URL hash (`.../#my-drill`).
+
+The full contract — file template, the `ctx.phase()` / `isRunning()` rules, the
+colour palette, and timing guidance — lives in
+**[DRILL-AUTHORING.md](DRILL-AUTHORING.md)**. Read it before writing drill code.
+In short:
 
 ```js
-const myDrill = {
-  id: 'cross-court-block-read',               // URL hash: .../#cross-court-block-read
-  category: 'Block',                          // picker group (Attack, Block, ...)
+'use strict'
+
+registerDrill({
+  id: 'cross-court-block-read',   // URL hash: .../#cross-court-block-read
+  category: 'Block',              // picker group (Attack, Block, Serve & Pass, …)
   name: 'Cross-court block read',
   summary: 'One line shown in the info panel.',
-  phases: ['Step 1 …', 'Step 2 …'],           // bullet list in the UI
-  legend: [                                   // colour key (Ball is added automatically)
-    { c: '#efa581', t: 'Blocker' },
-    { c: '#3b5bdb', t: 'Attacker' }
-  ],
+  legend: [ { c: '#efa581', t: 'Blocker' }, { c: '#3b5bdb', t: 'Attacker' } ],
+  phases: ['Set — …', 'Block — …'],   // drives the stepper + ticker
 
-  setup (ctx) {                               // add players first, ball LAST
-    ctx.player('blocker', 760, 80, 'B')       // (name, x, y, label)
+  setup (ctx) {                        // add players first, ball LAST
+    ctx.player('blocker', 760, 80, 'B')
     ctx.ball('ball', 200, -560)
   },
-  afterSetup (ctx) {                          // optional: tints after first draw
-    ctx.tint(ctx.o.blocker, '#3b5bdb')
-  },
-  async rep (ctx, isRunning) {                // ONE repetition
+  afterSetup (ctx) { ctx.tint(ctx.o.blocker, '#3b5bdb') },  // optional tints
+
+  async rep (ctx, isRunning) {         // ONE repetition
+    ctx.phase(0)                       // <- phase boundary (powers stepping)
     ctx.move(ctx.o.ball, 750, 250)
-    await ctx.draw(600)                        // animate everything, ms
-    if (!isRunning()) return                   // lets Pause take effect
+    await ctx.draw(600); if (!isRunning()) return   // animate, then let Pause act
+    ctx.phase(1)
     ctx.highlight(ctx.o.blocker, true)
     ctx.move(ctx.o.blocker, 720, 100)
     await ctx.draw(500); if (!isRunning()) return
   },
-  async reset (ctx) { /* move objects home, await ctx.draw(400) */ }
-}
-
-registerDrill(myDrill)                         // <-- makes it appear in the picker
+  async reset (ctx) { /* move objects home, ctx.clearHighlights(), await ctx.draw(400) */ }
+})
 ```
 
-Then add one line to `index.html` — a `<script src="drills/your-file.js">` tag after
-the other drill scripts. That's it: it shows up in the dropdown under its category
-and gets its own shareable `#id` link. No new pages, no duplicated layout.
+Then add one line to `index.html` — a `<script src="drills/your-file.js">` tag
+after the other drill scripts (order = picker order). It shows up in the picker
+under its category and gets its own shareable `#id` link. No new pages, no
+duplicated layout.
 
 ### Coordinate system (full court)
 
@@ -90,18 +99,7 @@ and gets its own shareable `#id` link. No new pages, no duplicated layout.
 Put the "home" team on the near side (positive `y`); the far side (negative `y`) is
 the opponent. `100 units ≈ 1 metre`.
 
-### Suggested library layout
-
-```
-drills/
-  wash-attack-block.js   category: Attack   (#wash-attack-block)
-  block-close-pin.js     category: Block    (#block-close-pin)
-  ...
-```
-
-Drills are grouped in the picker by their `category`, so the **Attack** and **Block**
-libraries are just drills that declare `category: 'Attack'` / `category: 'Block'`.
-Each also gets a shareable deep link, e.g.
+Each drill also gets a shareable deep link, e.g.
 `https://arvzie-sketch.github.io/volleyball-drills/#block-close-pin`.
 
 ## Notes & limits

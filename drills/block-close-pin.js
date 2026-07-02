@@ -71,6 +71,7 @@ const blockClosePinDrill = {
     const blockPt = side === 'left' ? BP.blockPtLeft : BP.blockPtRight
 
     // 1a) READ — the setter releases toward the pin; the blocker reads the set
+    ctx.phase(0)
     ctx.highlight(o.blocker, true)
     ctx.move(ball, (BP.ballHome.x + pin.x) / 2, (BP.ballHome.y + pin.y) / 2)
     await ctx.draw(170); if (!isRunning()) return
@@ -78,21 +79,25 @@ const blockClosePinDrill = {
     // 1b) FOLLOW — ball finishes to the pin while the blocker follows it across
     //     the net with little delay and the hitter arrives, so the block is up
     //     the instant the hitter contacts the ball
+    ctx.phase(1)
     ctx.move(ball, pin.x, pin.y)
     ctx.move(o.atk, pin.x, pin.y + 8)
     ctx.move(o.blocker, close.x, close.y)
     await ctx.draw(560); if (!isRunning()) return
 
     // 2) HIT into the block — near-instant, everything is right at the net
+    ctx.phase(2)
     ctx.move(ball, blockPt.x, blockPt.y)
     await ctx.draw(140); if (!isRunning()) return
 
     // 3) STUFF — the block rebounds the ball straight back down, near-instant
+    ctx.phase(3)
     const s = BP.stuff(side)
     ctx.move(ball, s.x, s.y)
     await ctx.draw(230); if (!isRunning()) return
 
     // 4) RESET
+    ctx.phase(4)
     ctx.highlight(o.blocker, false)
     ctx.move(o.blocker, BP.blockerHome.x, BP.blockerHome.y)
     ctx.move(o.atk, BP.attackerWait.x, BP.attackerWait.y)

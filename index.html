@@ -4,163 +4,323 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Volleyball Drills</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <style>
-    :root { --glass: rgba(255,255,255,0.08); --line: rgba(255,255,255,0.18); }
+    :root {
+      --bg:#101418; --panel:#161B21; --raised:#1C2830; --stage:#141A20;
+      --border:#1F262D; --border2:#2A333C;
+      --text:#E8EDF1; --text2:#AEB9C2; --muted:#5F6B76; --muted2:#7A8794;
+      --accent:#34C388; --accent-glow:#34C38866; --accent-soft:#7DD3B0; --ball:#fffb00;
+    }
     * { box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; }
     body {
-      margin: 0; min-height: 100vh; color: #eef3f6;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: radial-gradient(1200px 600px at 20% -10%, #2b6c7d 0%, #16323b 55%, #0d1f25 100%);
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
+    .flex1 { flex: 1; }
+    code { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--muted); }
 
-    /* ---------- mobile-first (single column) ---------- */
-    header { padding: 18px 16px 4px; }
-    header h1 { margin: 0; font-size: 1.15rem; font-weight: 650; line-height: 1.25; letter-spacing: .2px; }
-    header p { margin: 6px 0 0; color: #9fc0cc; font-size: .9rem; }
+    /* ================= app shell (mobile-first) ================= */
+    .app { min-height: 100vh; }
+    .rail { display: none; }
 
-    .wrap { display: flex; flex-direction: column; gap: 16px; padding: 14px 16px 36px; }
-    .card {
-      background: var(--glass); border: 1px solid var(--line); border-radius: 16px;
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+    .main { display: flex; flex-direction: column; gap: 14px; padding: 14px 16px 36px; min-width: 0; }
+
+    .brand { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+
+    .topbar { display: flex; align-items: center; gap: 8px; padding: 2px 2px 0; }
+
+    .gear {
+      width: 44px; height: 44px; flex: none; border-radius: 10px; border: 1px solid var(--border2);
+      background: var(--panel); color: var(--text2); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
     }
+    .gear:hover { background: #1A222A; }
+    .gear svg { width: 17px; height: 17px; }
 
-    .court-card { padding: 12px; width: 100%; max-width: 520px; margin: 0 auto; }
-    #court { line-height: 0; }
-    #court svg { display: block; width: 100%; height: auto; max-height: 74vh; margin: 0 auto; }
+    .cols { display: flex; flex-direction: column; gap: 14px; }
+    .court-col { width: 100%; max-width: 440px; margin: 0 auto; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    .info-col-wrap { }
 
-    .controls { display: flex; gap: 10px; margin-top: 12px; }
-    button {
-      flex: 1; min-height: 46px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
-      background: rgba(255,255,255,0.10); color: #eef3f6; font-size: 1rem; font-weight: 600;
-      cursor: pointer; touch-action: manipulation; transition: transform .06s ease, background .15s ease;
+    /* mobile drill picker */
+    .pick {
+      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 6px 14px;
+      border-radius: 12px; border: 1px solid var(--border2); background: var(--panel); color: var(--text);
+      cursor: pointer; text-align: left; font-family: inherit;
     }
-    button:hover { background: rgba(255,255,255,0.18); }
-    button:active { transform: translateY(1px); }
-    button.primary { background: #2fae7a; border-color: #2fae7a; }
-    button.primary:hover { background: #33c489; }
-    button:disabled { opacity: .45; cursor: default; }
+    .pick:hover { background: #1A222A; }
+    .pick-label { flex: none; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+    .pick-name { flex: 1; min-width: 0; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pick-caret { flex: none; width: 12px; height: 8px; }
 
-    /* drill picker trigger (opens the browser sheet) */
-    .drill-picker { display: flex; align-items: center; gap: 10px; width: 100%;
-      min-height: 48px; margin-bottom: 12px; padding: 8px 14px; border-radius: 12px;
-      border: 1px solid var(--line); background: rgba(255,255,255,0.10); color: #eef3f6;
-      cursor: pointer; text-align: left; }
-    .drill-picker:hover { background: rgba(255,255,255,0.16); }
-    .dp-label { flex: 0 0 auto; font-size: .7rem; font-weight: 700; letter-spacing: .6px;
-      text-transform: uppercase; color: #9fc0cc; }
-    .dp-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis;
-      white-space: nowrap; font-weight: 600; font-size: 1rem; }
-    .dp-caret { flex: 0 0 auto; color: #9fc0cc; font-size: .8rem; }
+    /* court stage */
+    .stage { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--stage); }
+    .court { line-height: 0; min-height: 280px; }
+    .court svg { display: block; width: 100%; height: auto; }
 
-    /* drill browser — bottom sheet on mobile, dialog on desktop */
-    .sheet-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.55);
-      display: flex; align-items: flex-end; justify-content: center; }
-    .sheet-backdrop[hidden] { display: none; }
-    .sheet { display: flex; flex-direction: column; width: 100%; max-height: 82vh;
-      background: #15323b; border: 1px solid var(--line); border-radius: 18px 18px 0 0;
-      box-shadow: 0 -12px 40px rgba(0,0,0,.45); animation: sheetUp .18s ease-out; }
+    /* on-court phase ticker */
+    .ticker {
+      position: absolute; left: 10px; right: 10px; bottom: 104px; display: flex; justify-content: center;
+      pointer-events: none;
+    }
+    .ticker[hidden] { display: none; }
+    .ticker-inner {
+      display: flex; align-items: center; gap: 8px; max-width: 100%;
+      background: rgba(10,13,16,.82); border: 1px solid var(--border2); border-radius: 999px; padding: 6px 13px;
+    }
+    .ticker-num { flex: none; font-size: 10.5px; font-weight: 700; color: var(--accent-soft); font-family: ui-monospace, Menlo, monospace; }
+    .ticker-text { font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* transport */
+    .transport { position: absolute; left: 0; right: 0; bottom: 0; padding: 30px 12px 12px;
+      background: linear-gradient(transparent, rgba(10,13,16,.94) 45%); }
+    .segs { display: flex; gap: 4px; margin-bottom: 10px; }
+    .seg { flex: 1; height: 3px; border-radius: 2px; background: var(--border2); }
+    .seg.on { background: var(--accent); }
+    .controls { display: flex; align-items: center; gap: 9px; }
+    .tbtn {
+      width: 44px; height: 44px; flex: none; border-radius: 10px; border: 1px solid var(--border2);
+      background: rgba(22,27,33,.6); color: var(--text2); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 14px; padding: 0; font-family: inherit;
+    }
+    .tbtn:hover { background: rgba(34,42,50,.8); }
+    .tbtn:active { transform: scale(.95); }
+    .pbtn {
+      width: 44px; height: 44px; flex: none; border-radius: 50%; border: none; background: var(--accent);
+      color: #101418; display: flex; align-items: center; justify-content: center; cursor: pointer;
+      font-size: 15px; padding: 0; font-family: inherit;
+    }
+    .pbtn:active { transform: scale(.95); }
+    .speed { display: flex; border: 1px solid var(--border2); border-radius: 9px; overflow: hidden; background: rgba(22,27,33,.6); }
+    .speed button {
+      padding: 12px 11px; border: none; background: transparent; font-size: 11px; font-weight: 600;
+      font-family: ui-monospace, Menlo, monospace; color: var(--muted); cursor: pointer;
+    }
+    .speed button.on { color: var(--accent-soft); background: var(--raised); }
+    .rep { flex: none; font-size: 11px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
+
+    /* info column */
+    .info { width: 100%; max-width: 440px; margin: 0 auto; border: 1px solid var(--border); border-radius: 14px;
+      background: #12171D; padding: 20px 20px 18px; }
+    .info-name { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
+    .info-sum { margin: 6px 0 0; font-size: 13px; color: var(--muted2); line-height: 1.55; }
+    .stepper { display: flex; flex-direction: column; margin-top: 16px; }
+    .pstep { display: flex; gap: 12px; padding: 5px 0; }
+    .pdot {
+      width: 20px; height: 20px; flex: none; border-radius: 50%; box-sizing: border-box;
+      background: #12171D; border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #101418; margin-top: 1px;
+    }
+    .pdot.done { background: var(--accent); border-color: var(--accent); }
+    .pdot.active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+    .ptext { font-size: 13.5px; line-height: 1.5; color: var(--text2); }
+    .ptext.done { color: var(--muted); }
+    .ptext.active { color: var(--text); font-weight: 600; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; padding-top: 15px; border-top: 1px solid var(--border); }
+    .legend span.chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text2); }
+    .legend .ldot { width: 11px; height: 11px; flex: none; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55); }
+
+    /* ================= drill list (rail + sheet share this) ================= */
+    .cat { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 12px 10px 4px; }
+    .row {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; text-align: left;
+      padding: 9px 10px; border: none; border-radius: 8px; background: transparent; color: var(--text2);
+      font-size: 13.5px; font-weight: 400; line-height: 1.35; cursor: pointer; font-family: inherit;
+    }
+    .row:hover { background: #1A222A; }
+    .row.active { background: var(--raised); color: var(--accent-soft); font-weight: 600; }
+    .row-name { min-width: 0; }
+    .row-dot { width: 6px; height: 6px; flex: none; border-radius: 50%; background: transparent; }
+    .row.active .row-dot { background: var(--accent); }
+    .empty { padding: 26px 12px; text-align: center; color: var(--muted2); font-size: 13px; }
+
+    /* ================= sheets (mobile drill picker + settings) ================= */
+    .scrim { position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; }
+    .scrim[hidden] { display: none; }
+    #setScrim { z-index: 60; }
+    .sheet {
+      display: flex; flex-direction: column; width: 100%; max-width: 560px; max-height: 80vh;
+      background: var(--panel); border: 1px solid var(--border2); border-radius: 18px 18px 0 0;
+      box-shadow: 0 -12px 40px rgba(0,0,0,.5); animation: sheetUp .18s ease-out;
+    }
+    .sheet-narrow { max-width: 420px; padding-bottom: 26px; }
     @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     @keyframes sheetIn { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .sheet-head { display: flex; gap: 10px; padding: 14px; border-bottom: 1px solid var(--line); }
-    #drillSearch { flex: 1; min-width: 0; min-height: 44px; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid var(--line); background: rgba(255,255,255,0.08); color: #eef3f6; font-size: 1rem; }
-    #drillSearch:focus { outline: 2px solid #2fae7a; outline-offset: 1px; }
-    #sheetClose { flex: 0 0 auto; width: 44px; min-height: 44px; padding: 0; border-radius: 10px;
-      border: 1px solid var(--line); background: rgba(255,255,255,0.08); color: #eef3f6;
-      font-size: 1.1rem; cursor: pointer; }
-    .sheet-list { overflow-y: auto; padding: 6px 8px 16px; -webkit-overflow-scrolling: touch; }
-    .sheet-cat { position: sticky; top: 0; padding: 12px 12px 6px; background: #15323b;
-      font-size: .7rem; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #7fb0bf; }
-    .sheet-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
-      min-height: 48px; padding: 11px 12px; border: none; border-radius: 12px; background: transparent;
-      color: #eef3f6; font-size: 1rem; font-weight: 500; cursor: pointer; }
-    .sheet-row:hover { background: rgba(255,255,255,0.06); }
-    .sheet-row.active { background: rgba(47,174,122,.18); }
-    .sheet-row .rname { flex: 1 1 auto; min-width: 0; }
-    .sheet-row .check { flex: 0 0 auto; color: #2fae7a; opacity: 0; }
-    .sheet-row.active .check { opacity: 1; }
-    .sheet-empty { padding: 26px 12px; text-align: center; color: #9fc0cc; }
-
-    .info { padding: 16px 18px; width: 100%; max-width: 520px; margin: 0 auto; }
-    .info h2 { margin: 0 0 4px; font-size: 1.02rem; }
-    .info .sub { color: #9fc0cc; font-size: .88rem; margin: 0 0 14px; }
-    ol { margin: 0; padding-left: 18px; }
-    ol li { margin: 7px 0; color: #dbe7ec; font-size: .9rem; }
-    .legend { display: flex; flex-wrap: wrap; gap: 10px 14px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
-    .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: .82rem; color: #cfe0e6; }
-    .dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #f5f5f5; flex: 0 0 auto; }
-    .status { margin-top: 12px; font-size: .8rem; color: #8fb4c0; }
-    footer { padding: 0 16px 24px; color: #7fa0ac; font-size: .78rem; }
-    footer a { color: #9fd0dd; }
-
-    /* ---------- wide screens (court + info side by side) ---------- */
-    @media (min-width: 880px) {
-      header { padding: 28px 32px 8px; }
-      header h1 { font-size: 1.5rem; }
-      header p { max-width: 720px; }
-      .wrap { flex-direction: row; flex-wrap: wrap; gap: 28px; padding: 20px 32px 48px; align-items: flex-start; }
-      .court-card { width: 460px; max-width: 460px; padding: 18px; margin: 0; }
-      #court svg { max-height: none; }
-      .info { width: auto; max-width: 440px; margin: 0; padding: 22px 24px; }
-      /* centered dialog instead of a bottom sheet */
-      .sheet-backdrop { align-items: center; }
-      .sheet { max-width: 520px; max-height: 70vh; border-radius: 18px; animation: sheetIn .16s ease-out; }
+    .sheet-head { display: flex; align-items: center; gap: 10px; padding: 14px; border-bottom: 1px solid var(--border); }
+    .search {
+      flex: 1; min-width: 0; min-height: 44px; border: 1px solid var(--border2); background: #101418; border-radius: 10px;
+      padding: 0 12px; color: var(--text); font-size: 15px; font-family: inherit; outline: none;
     }
+    .search:focus { border-color: var(--accent); }
+    .sheet-close { border-radius: 10px; font-size: 15px; }
+    .set-head { padding: 14px 14px 12px 18px; }
+    .set-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+    .sheet-list { overflow-y: auto; padding: 6px 10px 20px; -webkit-overflow-scrolling: touch; }
+    .sheet-list .row { min-height: 48px; padding: 6px 12px; border-radius: 10px; font-size: 15px; }
 
-    /* ---------- short landscape (e.g. phone turned sideways) ---------- */
-    @media (orientation: landscape) and (max-height: 600px) {
-      .wrap { flex-direction: row; align-items: flex-start; gap: 16px; }
-      .court-card { width: auto; max-width: none; margin: 0; }
-      #court svg { width: auto; height: 82vh; max-height: 82vh; }
-      .info { margin: 0; }
+    /* settings */
+    .set-body { display: flex; flex-direction: column; gap: 20px; padding: 18px; }
+    .set-group { display: flex; flex-direction: column; gap: 10px; }
+    .set-label { font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .swatches { display: flex; gap: 14px; }
+    .swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid var(--border2); box-sizing: border-box; cursor: pointer; padding: 0; }
+    .swatch.sel { border-color: var(--text); }
+    .segmented { display: flex; border: 1px solid var(--border2); border-radius: 10px; overflow: hidden; }
+    .segmented button {
+      flex: 1; display: flex; align-items: center; justify-content: center; min-height: 44px; border: none;
+      background: transparent; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: inherit;
+    }
+    .segmented button.on { color: var(--accent-soft); background: var(--raised); }
+    .toggle-row { display: flex; align-items: center; gap: 12px; min-height: 44px; cursor: pointer; background: none; border: none; padding: 0; text-align: left; font-family: inherit; }
+    .toggle-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .toggle-title { font-size: 13.5px; font-weight: 600; color: var(--text); }
+    .toggle-sub { font-size: 12px; color: var(--muted2); }
+    .switch { width: 46px; height: 28px; flex: none; border-radius: 999px; background: var(--border2); padding: 3px; box-sizing: border-box; transition: background .15s; }
+    .switch.on { background: var(--accent); }
+    .switch .knob { display: block; width: 22px; height: 22px; border-radius: 50%; background: var(--text); transition: transform .15s; }
+    .switch.on .knob { transform: translateX(18px); }
+    .set-note { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    /* ================= desktop (>= 1000px) ================= */
+    @media (min-width: 1000px) {
+      .app { display: grid; grid-template-columns: 252px minmax(0, 1fr); min-height: 100vh; }
+      .rail {
+        display: flex; flex-direction: column; gap: 4px; border-right: 1px solid var(--border);
+        padding: 20px 14px; overflow-y: auto; max-height: 100vh; position: sticky; top: 0;
+      }
+      .rail-head { display: flex; align-items: center; gap: 8px; padding: 0 4px 14px 10px; }
+      .rail-head .brand { font-size: 14px; }
+      .rail .gear { width: 34px; height: 34px; border-radius: 9px; background: transparent; }
+      .rail .gear svg { width: 16px; height: 16px; }
+      .rail .search { flex: none; margin-bottom: 10px; min-height: 0; padding: 9px 11px; font-size: 13px;
+        border-radius: 8px; background: var(--panel); }
+      .drill-list { display: flex; flex-direction: column; }
+      .rail-foot { margin-top: auto; padding: 16px 10px 0; font-size: 11px; color: #3E4A55; line-height: 1.5; }
+      .rail-foot code { color: var(--muted); }
+
+      .topbar, .pick { display: none; }
+      .cols { flex-direction: row; gap: 28px; align-items: flex-start; }
+      .court-col { width: 410px; max-width: 410px; margin: 0; flex: none; }
+      .info { flex: 1; max-width: 520px; margin: 0; }
+
+      /* settings shows as a centred dialog on desktop */
+      #setScrim { align-items: center; }
+      #setSheet { border-radius: 18px; animation: sheetIn .16s ease-out; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Volleyball Drills</h1>
-    <p>An animated library of volleyball drills, rendered with the VBRotations engine.
-       Pick a drill to watch it play out on the court.</p>
-  </header>
-
-  <div class="wrap">
-    <div class="card court-card">
-      <button id="drillPicker" class="drill-picker" aria-haspopup="dialog">
-        <span class="dp-label">Drill</span>
-        <span class="dp-name" id="dpName">Choose a drill…</span>
-        <span class="dp-caret">▾</span>
-      </button>
-      <div id="court"></div>
-      <div class="controls">
-        <button id="playBtn" class="primary">▶ Play</button>
-        <button id="stepBtn">⏭ Step</button>
-        <button id="resetBtn">↺ Reset</button>
+  <div class="app">
+    <!-- ===== desktop rail ===== -->
+    <aside class="rail">
+      <div class="rail-head">
+        <span class="brand">Volleyball Drills</span>
+        <span class="flex1"></span>
+        <button class="gear" id="railGear" type="button" title="Display settings" aria-label="Display settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
+        </button>
       </div>
-    </div>
+      <input class="search" id="railSearch" type="search" placeholder="Search drills" autocomplete="off" aria-label="Search drills">
+      <nav class="drill-list" id="railList" aria-label="Drills"></nav>
+      <div class="rail-foot">Rendered with VBRotations (Apache-2.0). Drop a drill file into <code>drills/</code> and it appears here.</div>
+    </aside>
 
-    <div class="card info">
-      <h2 id="drillName"></h2>
-      <p class="sub" id="drillSummary"></p>
-      <ol id="phaseList"></ol>
-      <div class="legend" id="legend"></div>
-      <div class="status" id="status">Loading…</div>
+    <!-- ===== main ===== -->
+    <main class="main">
+      <!-- mobile top bar -->
+      <div class="topbar">
+        <span class="brand">Volleyball Drills</span>
+        <span class="flex1"></span>
+        <button class="gear" id="topGear" type="button" title="Display settings" aria-label="Display settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
+        </button>
+      </div>
+
+      <div class="cols">
+        <!-- court column -->
+        <div class="court-col">
+          <button class="pick" id="pickBtn" type="button" aria-haspopup="dialog">
+            <span class="pick-label">Drill</span>
+            <span class="pick-name" id="pickName">Loading…</span>
+            <svg class="pick-caret" viewBox="0 0 12 8" fill="none"><path d="M1 1.5 L6 6.5 L11 1.5" stroke="#5F6B76" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+
+          <div class="stage">
+            <div class="court" id="court"></div>
+
+            <div class="ticker" id="ticker" hidden>
+              <div class="ticker-inner">
+                <span class="ticker-num" id="tickerNum"></span>
+                <span class="ticker-text" id="tickerText"></span>
+              </div>
+            </div>
+
+            <div class="transport">
+              <div class="segs" id="segs"></div>
+              <div class="controls">
+                <button class="tbtn" id="backBtn" type="button" title="Back one phase" aria-label="Back one phase">⏮</button>
+                <button class="pbtn" id="playBtn" type="button" aria-label="Play">▶</button>
+                <button class="tbtn" id="fwdBtn" type="button" title="Forward one phase" aria-label="Forward one phase">⏭</button>
+                <button class="tbtn" id="resetBtn" type="button" title="Reset" aria-label="Reset">↺</button>
+                <span class="flex1"></span>
+                <div class="speed" id="speed" role="group" aria-label="Playback speed"></div>
+                <span class="rep" id="rep">rep 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- info column -->
+        <section class="info">
+          <h1 class="info-name" id="infoName"></h1>
+          <p class="info-sum" id="infoSum"></p>
+          <div class="stepper" id="stepper"></div>
+          <div class="legend" id="legend"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== mobile drill sheet ===== -->
+  <div class="scrim" id="drillScrim" hidden role="dialog" aria-modal="true" aria-label="Choose a drill">
+    <div class="sheet" id="drillSheet">
+      <div class="sheet-head">
+        <input class="search" id="sheetSearch" type="search" placeholder="Search drills" autocomplete="off" aria-label="Search drills">
+        <button class="tbtn sheet-close" id="drillSheetClose" type="button" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-list" id="sheetList"></div>
     </div>
   </div>
 
-  <footer>
-    Rendered with <a href="https://github.com/monkeysppp/VBRotations" target="_blank" rel="noopener">VBRotations</a>
-    (Apache-2.0). Drill choreography and runner added on top.
-  </footer>
-
-  <div class="sheet-backdrop" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Choose a drill">
-    <div class="sheet">
-      <div class="sheet-head">
-        <input id="drillSearch" type="search" placeholder="Search drills…" autocomplete="off" aria-label="Search drills">
-        <button id="sheetClose" aria-label="Close">✕</button>
+  <!-- ===== settings sheet ===== -->
+  <div class="scrim" id="setScrim" hidden role="dialog" aria-modal="true" aria-label="Display settings">
+    <div class="sheet sheet-narrow" id="setSheet">
+      <div class="sheet-head set-head">
+        <span class="set-title">Display settings</span>
+        <span class="flex1"></span>
+        <button class="tbtn sheet-close" id="setClose" type="button" aria-label="Close">✕</button>
       </div>
-      <div class="sheet-list" id="sheetList"></div>
+      <div class="set-body">
+        <div class="set-group">
+          <span class="set-label">Accent colour</span>
+          <div class="swatches" id="swatches"></div>
+        </div>
+        <div class="set-group">
+          <span class="set-label">Court style</span>
+          <div class="segmented" id="courtSeg"></div>
+        </div>
+        <button class="toggle-row" id="tickerToggle" type="button" aria-pressed="true">
+          <span class="toggle-txt">
+            <span class="toggle-title">Phase ticker</span>
+            <span class="toggle-sub">Show the current phase name on the court</span>
+          </span>
+          <span class="switch" id="tickerSwitch"><span class="knob"></span></span>
+        </button>
+        <div class="set-note">Saved on this device.</div>
+      </div>
     </div>
   </div>
 
@@ -171,134 +331,318 @@
   <script src="drills/block-close-pin.js"></script>
   <script src="drills/butterfly-serve-pass.js"></script>
   <script>
-    const statusEl = document.getElementById('status')
-    const playBtn = document.getElementById('playBtn')
-    const stepBtn = document.getElementById('stepBtn')
-    const resetBtn = document.getElementById('resetBtn')
+  'use strict'
+  ;(function () {
+    // ---- persistence keys ----
+    var K = { drill: 'v1c-drill', accent: 'v1c-accent', court: 'v1c-court', ticker: 'v1c-ticker' }
+    var ACCENTS = ['#34C388', '#4FB8D6', '#F5D547']
+    var COURTS = {
+      midnight: { backgroundColour: '#141A20', courtColour: '#1E2831', lineColour: '#5A6E80' },
+      classic:  { backgroundColour: '#2f7f8f', courtColour: '#e08444', lineColour: '#ffffff' }
+    }
+    var BALL_LEGEND = { c: '#fffb00', t: 'Ball' }
+    var SPEEDS = [{ v: 0.5, label: '.5×' }, { v: 1, label: '1×' }, { v: 2, label: '2×' }]
 
-    const pickerBtn = document.getElementById('drillPicker')
-    const dpName = document.getElementById('dpName')
-    const sheet = document.getElementById('sheet')
-    const sheetList = document.getElementById('sheetList')
-    const searchInput = document.getElementById('drillSearch')
-    const sheetClose = document.getElementById('sheetClose')
+    function lsGet (k) { try { return localStorage.getItem(k) } catch (e) { return null } }
+    function lsSet (k, v) { try { localStorage.setItem(k, v) } catch (e) {} }
 
-    let current = null
-
-    const BALL_LEGEND = { c: '#fffb00', t: 'Ball' }
-
-    function renderInfo (drill) {
-      document.getElementById('drillName').textContent = drill.name
-      document.getElementById('drillSummary').textContent = drill.summary
-      const list = document.getElementById('phaseList')
-      list.innerHTML = ''
-      drill.phases.forEach(function (t) {
-        const li = document.createElement('li'); li.textContent = t; list.appendChild(li)
-      })
-      const legend = document.getElementById('legend')
-      legend.innerHTML = ''
-      const entries = (drill.legend || []).concat([BALL_LEGEND])
-      entries.forEach(function (e) {
-        const span = document.createElement('span')
-        const dot = document.createElement('span')
-        dot.className = 'dot'; dot.style.background = e.c
-        span.appendChild(dot)
-        span.appendChild(document.createTextNode(e.t))
-        legend.appendChild(span)
-      })
+    // ---- state ----
+    var state = {
+      currentId: null,
+      runState: 'ready',
+      activeSet: [],
+      doneMax: -1,
+      rep: 0,
+      speed: 1,
+      accent: ACCENTS.indexOf(lsGet(K.accent)) !== -1 ? lsGet(K.accent) : '#34C388',
+      courtStyle: (lsGet(K.court) === 'classic' || lsGet(K.court) === 'midnight') ? lsGet(K.court) : 'midnight',
+      ticker: lsGet(K.ticker) == null ? true : lsGet(K.ticker) === '1'
     }
 
-    // ---- drill browser (searchable, categorised) ----
-    function renderList (filter) {
-      const q = (filter || '').trim().toLowerCase()
-      sheetList.innerHTML = ''
-      let shown = 0
+    var $ = function (id) { return document.getElementById(id) }
+    var courtEl = $('court')
+    var pickName = $('pickName')
+    var infoName = $('infoName'), infoSum = $('infoSum')
+    var stepperEl = $('stepper'), segsEl = $('segs'), legendEl = $('legend')
+    var tickerEl = $('ticker'), tickerNum = $('tickerNum'), tickerText = $('tickerText')
+    var playBtn = $('playBtn'), backBtn = $('backBtn'), fwdBtn = $('fwdBtn'), resetBtn = $('resetBtn')
+    var repEl = $('rep'), speedEl = $('speed')
+    var railList = $('railList'), sheetList = $('sheetList')
+    var railSearch = $('railSearch'), sheetSearch = $('sheetSearch')
+
+    var runner = null
+
+    // ---- helpers ----
+    function el (tag, cls, text) {
+      var e = document.createElement(tag)
+      if (cls) e.className = cls
+      if (text != null) e.textContent = text
+      return e
+    }
+
+    // ---- drill list (shared by the rail and the mobile sheet) ----
+    function buildList (container, query) {
+      var q = (query || '').trim().toLowerCase()
+      container.innerHTML = ''
+      var shown = 0
       drillCategories().forEach(function (cat) {
-        const matches = cat.drills.filter(function (d) {
+        var rows = cat.drills.filter(function (d) {
           return !q || d.name.toLowerCase().indexOf(q) !== -1 || cat.name.toLowerCase().indexOf(q) !== -1
         })
-        if (!matches.length) return
-        const head = document.createElement('div')
-        head.className = 'sheet-cat'; head.textContent = cat.name
-        sheetList.appendChild(head)
-        matches.forEach(function (d) {
+        if (!rows.length) return
+        container.appendChild(el('div', 'cat', cat.name))
+        rows.forEach(function (d) {
           shown++
-          const row = document.createElement('button')
-          row.className = 'sheet-row' + (current && d.id === current.id ? ' active' : '')
-          const name = document.createElement('span'); name.className = 'rname'; name.textContent = d.name
-          const check = document.createElement('span'); check.className = 'check'; check.textContent = '✓'
-          row.appendChild(name); row.appendChild(check)
-          row.addEventListener('click', function () { closeSheet(); selectDrill(d.id, true) })
-          sheetList.appendChild(row)
+          var row = el('button', 'row' + (d.id === state.currentId ? ' active' : ''))
+          row.type = 'button'
+          row.appendChild(el('span', 'row-name', d.name))
+          row.appendChild(el('span', 'row-dot'))
+          row.addEventListener('click', function () { closeDrillSheet(); selectDrill(d.id, true) })
+          container.appendChild(row)
         })
       })
-      if (!shown) {
-        const empty = document.createElement('div')
-        empty.className = 'sheet-empty'
-        empty.textContent = 'No drills match “' + filter + '”.'
-        sheetList.appendChild(empty)
+      if (!shown) container.appendChild(el('div', 'empty', 'No drills match “' + query + '”.'))
+    }
+
+    function refreshLists () {
+      buildList(railList, railSearch.value)
+      if (!$('drillScrim').hidden) buildList(sheetList, sheetSearch.value)
+    }
+
+    // ---- info panel ----
+    function renderInfo (drill) {
+      infoName.textContent = drill.name
+      infoSum.textContent = drill.summary
+      legendEl.innerHTML = ''
+      ;(drill.legend || []).concat([BALL_LEGEND]).forEach(function (e) {
+        var chip = el('span', 'chip')
+        var dot = el('span', 'ldot'); dot.style.background = e.c
+        chip.appendChild(dot); chip.appendChild(document.createTextNode(e.t))
+        legendEl.appendChild(chip)
+      })
+      renderPhases()
+    }
+
+    // ---- phase stepper + progress segments ----
+    function renderPhases () {
+      var drill = state.currentId ? getDrill(state.currentId) : null
+      var phases = drill ? drill.phases : []
+      segsEl.innerHTML = ''
+      stepperEl.innerHTML = ''
+      phases.forEach(function (text, i) {
+        var active = state.activeSet.indexOf(i) !== -1
+        var done = !active && i <= state.doneMax
+        var seg = el('div', 'seg' + ((active || done) ? ' on' : ''))
+        segsEl.appendChild(seg)
+
+        var step = el('div', 'pstep')
+        var dot = el('span', 'pdot' + (done ? ' done' : (active ? ' active' : '')), done ? '✓' : '')
+        var txt = el('span', 'ptext' + (active ? ' active' : (done ? ' done' : '')), text)
+        step.appendChild(dot); step.appendChild(txt)
+        stepperEl.appendChild(step)
+      })
+    }
+
+    // ---- on-court ticker ----
+    function renderTicker () {
+      var drill = state.currentId ? getDrill(state.currentId) : null
+      var on = state.ticker && drill && drill.phases.length > 0
+      tickerEl.hidden = !on
+      if (!on) return
+      var playing = state.runState === 'playing'
+      var text = playing ? '' : 'Press play'
+      var num = playing ? '' : '▶'
+      if (state.activeSet.length && drill) {
+        var first = state.activeSet[0]
+        var last = state.activeSet[state.activeSet.length - 1]
+        var raw = drill.phases[first] || ''
+        text = raw.split('—')[0].trim() || raw
+        num = state.activeSet.length > 1
+          ? (first + 1) + '–' + (last + 1) + '/' + drill.phases.length
+          : (first + 1) + '/' + drill.phases.length
       }
+      tickerText.textContent = text
+      tickerNum.textContent = num
     }
 
-    function openSheet () {
-      searchInput.value = ''
-      renderList('')
-      sheet.hidden = false
-      document.body.style.overflow = 'hidden'
-      setTimeout(function () { searchInput.focus() }, 40)
-    }
-    function closeSheet () {
-      sheet.hidden = true
-      document.body.style.overflow = ''
+    function updateBackOpacity () {
+      backBtn.style.opacity = (runner && runner.cursor > 0) ? '1' : '0.35'
     }
 
-    pickerBtn.addEventListener('click', openSheet)
-    sheetClose.addEventListener('click', closeSheet)
-    sheet.addEventListener('click', function (e) { if (e.target === sheet) closeSheet() })
-    searchInput.addEventListener('input', function () { renderList(searchInput.value) })
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !sheet.hidden) closeSheet() })
+    // ---- engine callbacks ----
+    function onState (s) {
+      state.runState = s
+      var playing = s === 'playing'
+      playBtn.textContent = playing ? '⏸' : '▶'
+      playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play')
+      updateBackOpacity()
+      renderTicker()
+    }
+    function onPhase (idx) {
+      state.activeSet = idx || []
+      state.doneMax = state.activeSet.length ? Math.min.apply(null, state.activeSet) - 1 : -1
+      renderPhases(); renderTicker(); updateBackOpacity()
+    }
+    function onRep (n) {
+      state.rep = n
+      repEl.textContent = 'rep ' + n
+      state.activeSet = []; state.doneMax = -1
+      renderPhases(); renderTicker(); updateBackOpacity()
+    }
 
-    const runner = new DrillPlayer({
-      mountEl: document.getElementById('court'),
-      courtWidth: 460,
-      courtColours: { backgroundColour: '#2f7f8f', courtColour: '#e08444', lineColour: '#ffffff' },
-      onState: function (state) {
-        statusEl.textContent = 'Status: ' + state
-        const playing = state === 'playing'
-        playBtn.textContent = playing ? '⏸ Pause' : '▶ Play'
-        stepBtn.disabled = playing
-      }
-    })
-
+    // ---- drill selection ----
     async function selectDrill (id, updateHash) {
-      const drill = getDrill(id) || DRILLS[0]
+      var drill = getDrill(id) || DRILLS[0]
       if (!drill) return
-      current = drill
-      dpName.textContent = drill.name
+      state.currentId = drill.id
+      lsSet(K.drill, drill.id)
+      pickName.textContent = drill.name
       renderInfo(drill)
+      refreshLists()
       if (updateHash && location.hash.slice(1) !== drill.id) {
         history.replaceState(null, '', '#' + drill.id)
       }
       await runner.load(drill)
     }
 
+    // ---- transport wiring ----
     playBtn.addEventListener('click', function () {
-      if (runner.running) runner.pause()
-      else runner.play()
+      if (!runner) return
+      if (runner.running) runner.pause(); else runner.play()
     })
-    stepBtn.addEventListener('click', function () { runner.step() })
-    resetBtn.addEventListener('click', function () { runner.reset() })
+    fwdBtn.addEventListener('click', function () { if (runner) runner.stepForward() })
+    backBtn.addEventListener('click', function () { if (runner) runner.stepBack() })
+    resetBtn.addEventListener('click', function () { if (runner) runner.reset() })
 
-    // deep-linking: #<drill-id> selects that drill; back/forward & shared links work
+    function buildSpeed () {
+      speedEl.innerHTML = ''
+      SPEEDS.forEach(function (s) {
+        var b = el('button', state.speed === s.v ? 'on' : '', s.label)
+        b.type = 'button'
+        b.addEventListener('click', function () {
+          if (runner) runner.speed = s.v
+          state.speed = s.v
+          buildSpeed()
+        })
+        speedEl.appendChild(b)
+      })
+    }
+
+    // ---- sheets ----
+    function openDrillSheet () {
+      sheetSearch.value = ''
+      buildList(sheetList, '')
+      $('drillScrim').hidden = false
+      document.body.style.overflow = 'hidden'
+      setTimeout(function () { sheetSearch.focus() }, 40)
+    }
+    function closeDrillSheet () {
+      $('drillScrim').hidden = true
+      if ($('setScrim').hidden) document.body.style.overflow = ''
+    }
+    function openSettings () { $('setScrim').hidden = false; document.body.style.overflow = 'hidden' }
+    function closeSettings () {
+      $('setScrim').hidden = true
+      if ($('drillScrim').hidden) document.body.style.overflow = ''
+    }
+
+    $('pickBtn').addEventListener('click', openDrillSheet)
+    $('drillSheetClose').addEventListener('click', closeDrillSheet)
+    $('drillScrim').addEventListener('click', function (e) { if (e.target === $('drillScrim')) closeDrillSheet() })
+    $('railGear').addEventListener('click', openSettings)
+    $('topGear').addEventListener('click', openSettings)
+    $('setClose').addEventListener('click', closeSettings)
+    $('setScrim').addEventListener('click', function (e) { if (e.target === $('setScrim')) closeSettings() })
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return
+      if (!$('setScrim').hidden) closeSettings()
+      else if (!$('drillScrim').hidden) closeDrillSheet()
+    })
+
+    railSearch.addEventListener('input', function () { buildList(railList, railSearch.value) })
+    sheetSearch.addEventListener('input', function () { buildList(sheetList, sheetSearch.value) })
+
+    // ---- settings: accent / court style / ticker ----
+    function applyAccent (c) {
+      state.accent = c
+      var root = document.documentElement
+      root.style.setProperty('--accent', c)
+      root.style.setProperty('--accent-glow', c + '66')
+    }
+    function buildSwatches () {
+      var wrap = $('swatches')
+      wrap.innerHTML = ''
+      ACCENTS.forEach(function (c) {
+        var b = el('button', 'swatch' + (c === state.accent ? ' sel' : ''))
+        b.type = 'button'; b.style.background = c
+        b.setAttribute('aria-label', 'Accent ' + c)
+        b.addEventListener('click', function () { lsSet(K.accent, c); applyAccent(c); buildSwatches() })
+        wrap.appendChild(b)
+      })
+    }
+    function buildCourtSeg () {
+      var wrap = $('courtSeg')
+      wrap.innerHTML = ''
+      ;[{ v: 'midnight', label: 'Midnight' }, { v: 'classic', label: 'Classic sand' }].forEach(function (o) {
+        var b = el('button', state.courtStyle === o.v ? 'on' : '', o.label)
+        b.type = 'button'
+        b.addEventListener('click', function () {
+          if (o.v === state.courtStyle) return
+          state.courtStyle = o.v
+          lsSet(K.court, o.v)
+          buildCourtSeg()
+          if (runner) { runner.courtColours = COURTS[o.v]; runner.load(getDrill(state.currentId)) }
+        })
+        wrap.appendChild(b)
+      })
+    }
+    function applyTicker () {
+      $('tickerSwitch').classList.toggle('on', state.ticker)
+      $('tickerToggle').setAttribute('aria-pressed', state.ticker ? 'true' : 'false')
+      renderTicker()
+    }
+    $('tickerToggle').addEventListener('click', function () {
+      state.ticker = !state.ticker
+      lsSet(K.ticker, state.ticker ? '1' : '0')
+      applyTicker()
+    })
+
+    // ---- deep linking ----
     window.addEventListener('hashchange', function () {
-      const id = location.hash.slice(1)
-      if (id && (!current || id !== current.id)) selectDrill(id, false)
+      var id = location.hash.slice(1)
+      if (id && (!state.currentId || id !== state.currentId) && getDrill(id)) selectDrill(id, false)
     })
 
-    window.addEventListener('load', function () {
-      const fromHash = location.hash.slice(1)
-      selectDrill(getDrill(fromHash) ? fromHash : (DRILLS[0] && DRILLS[0].id), true)
-    })
+    // ---- boot ----
+    function init () {
+      applyAccent(state.accent)
+      runner = new DrillPlayer({
+        mountEl: courtEl,
+        courtWidth: 460,
+        courtColours: COURTS[state.courtStyle],
+        onState: onState,
+        onPhase: onPhase,
+        onRep: onRep
+      })
+      buildSpeed()
+      buildSwatches()
+      buildCourtSeg()
+      applyTicker()
+      refreshLists()
+
+      var fromHash = location.hash.slice(1)
+      var saved = lsGet(K.drill)
+      var startId = getDrill(fromHash) ? fromHash
+        : (getDrill(saved) ? saved : (DRILLS[0] && DRILLS[0].id))
+      if (startId) selectDrill(startId, true)
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init)
+    } else {
+      init()
+    }
+  })()
   </script>
 </body>
 </html>
