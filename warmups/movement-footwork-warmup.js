@@ -12,6 +12,7 @@
 registerWarmup({
   id: 'movement-footwork-warmup',
   category: 'Movement',
+  skills: ['movement'],
   name: 'Movement & footwork warmup',
   summary: 'No-ball general warmup: jog, dynamic movement, then reactive footwork in ' +
            'pairs. Run this first, before any ball-control warmup.',

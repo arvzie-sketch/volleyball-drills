@@ -12,6 +12,7 @@
 registerWarmup({
   id: 'pair-throw-toss-warmup',
   category: 'Ball control',
+  skills: ['attack', 'ball-control'],  // the ladder builds the overhand hitting motion
   name: 'Pair throw & toss warmup',
   summary: 'Partner arm-warmup ladder: two-hand throws build to one-arm throws, ' +
            'a bounce, and finally a controlled hit down to your partner.',

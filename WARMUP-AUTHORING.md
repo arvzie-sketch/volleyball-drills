@@ -17,6 +17,7 @@ changes.
 registerWarmup({
   id: 'my-warmup-id',           // stable, URL/kebab-case, unique across drills AND warmups
   category: 'Ball control',     // groups inside the picker's Warmups section
+  skills: ['pass', 'set', 'ball-control'],  // filter-chip facets (DRILL-AUTHORING.md rule 10)
   name: 'Readable warmup name',
   summary: '1–2 sentences shown under the title.',
   setupNote: 'Split into pairs, one ball per pair, about 3–4 m apart.', // optional
@@ -44,6 +45,9 @@ registerWarmup({
    countdown timer is on [backlog.md](backlog.md)).
 5. Progressions should build: each stage adds one touch, turn, or constraint
    to the previous one.
+6. **`skills[]`** — same fixed vocabulary and same "tag what is trained" bar
+   as drills (see rule 10 in [DRILL-AUTHORING.md](DRILL-AUTHORING.md)); the
+   picker's filter chips search warmups and drills together.
 
 ## Wiring it in
 
@@ -60,5 +64,5 @@ node tools/verify-drill.mjs warmups/my-warmup-id.js   # no args = all drills + w
 ```
 
 The verifier checks the descriptor shape, kebab-case id, id uniqueness across
-the whole library, positive durations, cue types, global-scope name
-collisions, and the `<script>` tag in `index.html`.
+the whole library, the `skills[]` vocabulary, positive durations, cue types,
+global-scope name collisions, and the `<script>` tag in `index.html`.

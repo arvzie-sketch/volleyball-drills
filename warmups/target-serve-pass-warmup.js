@@ -11,6 +11,7 @@
 registerWarmup({
   id: 'target-serve-pass-warmup',
   category: 'Serve & Pass',
+  skills: ['serve', 'pass'],
   name: 'Target serve & pass warmup',
   summary: 'Pairs build serving distance and accuracy while warming up the pass, ' +
            'then add called target zones for both the serve and the pass.',

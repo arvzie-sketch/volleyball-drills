@@ -12,6 +12,7 @@
 registerWarmup({
   id: 'pepper-warmup',
   category: 'Ball control',
+  skills: ['pass', 'set', 'attack', 'dig', 'ball-control'],
   name: 'Pepper warmup',
   summary: 'Continuous pass-set-hit-dig rally between two players — the most common ' +
            'self-run warmup in the game. Build from half speed to full speed and movement.',

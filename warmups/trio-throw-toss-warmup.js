@@ -13,6 +13,7 @@
 registerWarmup({
   id: 'trio-throw-toss-warmup',
   category: 'Ball control',
+  skills: ['attack', 'ball-control'],  // the ladder builds the overhand hitting motion
   name: 'Trio throw & toss warmup',
   summary: 'Three-player version of the throw & toss ladder: two queue on one side, ' +
            'one stands alone on the other. Throw, then jog across to the back of the ' +

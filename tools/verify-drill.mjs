@@ -11,7 +11,7 @@
  * Each drill file is executed in its own VM sandbox with a stubbed `ctx`
  * (same API + `_home`/`_cur` semantics as DrillContext in engine.js), then:
  *
- *   1. descriptor shape    id/category/name/legend/phases, palette colours
+ *   1. descriptor shape    id/category/skills/name/legend/phases, palette colours
  *   2. full run            setup → rep × 25 → reset, checking on the way:
  *                            - ball added last in setup()
  *                            - ctx.phase() called before each rep's moves,
@@ -38,6 +38,10 @@ const DRILLS_DIR = path.join(ROOT, 'drills')
 const WARMUPS_DIR = path.join(ROOT, 'warmups')
 
 const PALETTE = ['#efa581', '#e23b2b', '#3b5bdb', '#5b7fb5', '#66dd66']
+// Fixed skills vocabulary (DRILL-AUTHORING.md rule 10) — the picker's filter
+// chips are built from these tags, on drills and warmups alike.
+const SKILL_TAGS = ['serve', 'pass', 'set', 'attack', 'block', 'dig',
+  'transition', 'movement', 'ball-control']
 // A player circle (54 units wide) renders fully inside roughly this window of
 // the 1140×2040 design box — see "Engine facts" in DRILL-AUTHORING.md.
 const BOUNDS = { xMin: -90, xMax: 990, yAbs: 960 }
@@ -226,6 +230,20 @@ function truncate (s, n = 44) {
   return s.length > n ? s.slice(0, n - 1) + '…' : s
 }
 
+function checkSkills (item, report) {
+  if (!Array.isArray(item.skills) || item.skills.length === 0 ||
+      item.skills.some((s) => typeof s !== 'string')) {
+    report.fail(`skills[] must be a non-empty array of facet tags — the picker's filter chips are built from it (contract rule 10; pick from: ${SKILL_TAGS.join(', ')})`)
+    return
+  }
+  for (const s of item.skills) {
+    if (!SKILL_TAGS.includes(s)) {
+      report.fail(`skills tag "${s}" is outside the fixed vocabulary (${SKILL_TAGS.join(', ')}) — an unknown tag gets no filter chip`)
+    }
+  }
+  if (new Set(item.skills).size !== item.skills.length) report.warn('skills[] repeats a tag')
+}
+
 /* ------------------------------------------------------------ drill runner */
 
 async function verifyDrill (drill, report) {
@@ -234,6 +252,7 @@ async function verifyDrill (drill, report) {
     report.fail(`id "${drill.id}" must be stable kebab-case (it is the URL hash)`)
   }
   if (!drill.category || typeof drill.category !== 'string') report.fail('missing category')
+  checkSkills(drill, report)
   if (!drill.name || typeof drill.name !== 'string') report.fail('missing name')
   if (!drill.summary || typeof drill.summary !== 'string') report.warn('missing summary')
   const phasesOk = Array.isArray(drill.phases) && drill.phases.length > 0 &&
@@ -308,6 +327,7 @@ function verifyWarmup (w, report) {
     report.fail(`id "${w.id}" must be stable kebab-case (it is the URL hash)`)
   }
   if (!w.category || typeof w.category !== 'string') report.fail('missing category')
+  checkSkills(w, report)
   if (!w.name || typeof w.name !== 'string') report.fail('missing name')
   if (!w.summary || typeof w.summary !== 'string') report.warn('missing summary')
   if (w.setupNote != null && typeof w.setupNote !== 'string') report.fail('setupNote must be a string')

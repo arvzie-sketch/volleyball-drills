@@ -34,6 +34,7 @@ const BR = {
 const blockReadSetterDrill = {
   id: 'block-read-setter',
   category: 'Block',
+  skills: ['block'],
   name: 'Block read: track the setter',
   legend: [
     { c: '#efa581', t: 'Setting team' },

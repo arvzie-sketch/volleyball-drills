@@ -44,6 +44,10 @@ Present, before any code:
   instead of playing as sequential pauses. Call out where you'll defer or
   overlap actions to kill dead beats.
 - **Randomness** — what varies per rep (targets, chosen hitter, side).
+- **Skills tags** — the `skills[]` facets from the fixed vocabulary
+  (rule 10 in [DRILL-AUTHORING.md](../../../DRILL-AUTHORING.md)); the
+  picker's filter chips are built from them. Tag every skill the drill
+  *trains*, not every action that merely happens in it.
 
 The user will correct or approve. Iterate on the plan until they say
 "build" (or equivalent). **Do not start coding before that.**

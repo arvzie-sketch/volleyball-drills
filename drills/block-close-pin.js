@@ -31,6 +31,7 @@ const BP = {
 const blockClosePinDrill = {
   id: 'block-close-pin',
   category: 'Block',
+  skills: ['block'],
   name: 'Blocking: close the block to the pin',
   legend: [
     { c: '#efa581', t: 'Blocker' },

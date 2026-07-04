@@ -36,6 +36,7 @@ const P = {
 const washAttackBlockDrill = {
   id: 'wash-attack-block',        // stable, used in the URL hash (#wash-attack-block)
   category: 'Attack',             // which library it appears under in the picker
+  skills: ['serve', 'pass', 'set', 'attack', 'transition'], // no 'block': the block is a fake, it trains the transition
   name: 'Wash: serve-receive → transition → attack',
   legend: [
     { c: '#efa581', t: 'Attacker / Setter' },

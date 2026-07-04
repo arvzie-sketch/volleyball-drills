@@ -77,6 +77,7 @@ moves, two-sided mirroring). In short:
 registerDrill({
   id: 'cross-court-block-read',   // URL hash: .../#cross-court-block-read
   category: 'Block',              // picker group (Attack, Block, Serve & Pass, …)
+  skills: ['block'],              // filter-chip facets — every skill the drill trains
   name: 'Cross-court block read',
   summary: 'One line shown in the info panel.',
   legend: [ { c: '#efa581', t: 'Blocker' }, { c: '#3b5bdb', t: 'Attacker' } ],

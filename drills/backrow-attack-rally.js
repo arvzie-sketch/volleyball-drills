@@ -113,6 +113,7 @@
   registerDrill({
     id: 'backrow-attack-rally',
     category: 'Attack',
+    skills: ['dig', 'set', 'attack', 'transition'],
     name: 'Backrow attack rally (both sides)',
     legend: [
       { c: '#efa581', t: 'Backrow attacker / sub' },

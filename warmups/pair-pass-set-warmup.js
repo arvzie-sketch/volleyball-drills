@@ -10,6 +10,7 @@
 registerWarmup({
   id: 'pair-pass-set-warmup',
   category: 'Ball control',
+  skills: ['pass', 'set', 'ball-control'],
   name: 'Pair pass & set warmup',
   summary: 'Classic pair ball-control ladder: three passing stages, then three ' +
            'setting stages, one minute each. Each stage adds a touch or a turn.',

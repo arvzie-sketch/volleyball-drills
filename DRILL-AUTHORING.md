@@ -30,6 +30,7 @@ const MY = {
 registerDrill({
   id: 'my-drill-id',            // stable, URL/kebab-case, unique
   category: 'Attack',           // picker group; reuse existing names when apt
+  skills: ['attack', 'block'],  // filter-chip facets — every skill trained (rule 10)
   name: 'Readable drill name',
   summary: '1–2 sentences shown under the title.',
   legend: [                     // player colours; ball is added automatically
@@ -95,6 +96,14 @@ registerDrill({
    (a substitution during a dig, a setter releasing during a pass) share one
    `ctx.draw()` instead of playing as sequential pauses; see "Patterns for
    continuous / multi-touch drills" below.
+10. **`skills[]` — every skill the drill actually trains**, from the fixed
+    vocabulary: `serve`, `pass`, `set`, `attack`, `block`, `dig`,
+    `transition`, `movement`, `ball-control`. The picker's filter chips are
+    built from these (a drill can carry several — that is the point: a
+    combined attack-vs-block drill shows up under both chips, which a single
+    `category` can't do). Tag what is *trained*, not what merely happens: a
+    setter who only feeds the blockers doesn't make it a `set` drill, and a
+    fake block used to force a transition doesn't make it a `block` drill.
 
 ## Terminology (phase names must use it correctly)
 
@@ -126,10 +135,10 @@ The harness runs the drill headlessly in Node (no browser): it executes
 `isRunning()` flipping false after every draw. It asserts the rules above —
 phase indices valid and called before each phase's moves, an honoured
 `isRunning()` guard after every draw, every position inside the renderable
-area, ball added last, legend palette, no tint+highlight mixing on one
-object, unique kebab-case id, cross-file top-level name collisions, and the
-`<script>` tag present in `index.html`. Fix every failure; justify any
-warning you leave.
+area, ball added last, legend palette, `skills[]` present and inside the
+fixed vocabulary, no tint+highlight mixing on one object, unique kebab-case
+id, cross-file top-level name collisions, and the `<script>` tag present in
+`index.html`. Fix every failure; justify any warning you leave.
 
 ## Wiring it in
 

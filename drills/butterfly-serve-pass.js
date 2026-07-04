@@ -24,6 +24,7 @@ const FLY = {
 const butterflyDrill = {
   id: 'butterfly-serve-pass',
   category: 'Serve & Pass',
+  skills: ['serve', 'pass'],
   name: 'Butterfly: serve, pass, rotate',
   legend: [
     { c: '#efa581', t: 'Player (rotates)' },
