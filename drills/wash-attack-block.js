@@ -48,12 +48,12 @@ const washAttackBlockDrill = {
            'transitions off the net, the setter runs to target, and one random ' +
            'attacker finishes. Hitter rotates to the sub line. Repeat.',
   phases: [
-    'Serve — server sends an accurate, attack-speed serve at R5 or R6 (random)',
-    'Fake block — the three front-row attackers pretend to block at the net',
-    'Transition — attackers peel off the net to their approach start',
-    'Setter release — S runs from zone 1 to the target between zones 2/3',
-    'Pass — the targeted receiver passes to the setter target',
-    'Set + attack — S picks a random attacker, who approaches and hits over',
+    'Serve + fake block — server sends an accurate, attack-speed serve at R5 or R6 ' +
+      'while the three front-row attackers pretend to block at the net',
+    'Transition + pass — attackers peel off the net to their approach start and the ' +
+      'setter releases to target as the targeted receiver passes there',
+    'Set — S picks a random attacker, who approaches the net as the ball is set to the hitting spot',
+    'Attack — the hitter makes contact and drives the ball over the net',
     'Substitution — the hitter rotates to the sideline queue, a fresh player fills in'
   ],
 
@@ -96,7 +96,7 @@ const washAttackBlockDrill = {
     const hitIndex = ctx.pickIndex(3)
 
     // 1) SERVE (ball toward the receiver) + fake block (small hop to the net)
-    ctx.phase(0, 1)
+    ctx.phase(0)
     ctx.move(ball, target._home.x, target._home.y - 40)
     ctx.attackers.forEach((p, i) => ctx.move(p, ctx.frontZones[i].x, ctx.frontZones[i].y - 28))
     await ctx.draw(950); if (!isRunning()) return
@@ -106,16 +106,16 @@ const washAttackBlockDrill = {
     //    The ball keeps moving the instant it reaches the receiver (a slower,
     //    floaty pass) so the receiver never holds it, and the setter arrives at
     //    the target just as the pass does.
-    ctx.phase(2, 3, 4)
+    ctx.phase(1)
     ctx.move(ball, P.setterTarget.x + 15, P.setterTarget.y + 20)
     ctx.attackers.forEach((p, i) => ctx.move(p, ctx.approach[i].x, ctx.approach[i].y))
     ctx.move(o.setter, P.setterTarget.x, P.setterTarget.y)
     await ctx.draw(1400); if (!isRunning()) return
 
-    // 4) SET to the chosen attacker's zone (position 4 / 3 / 2) AND start the
+    // 3) SET to the chosen attacker's zone (position 4 / 3 / 2) AND start the
     //    approach in the SAME draw, so the attacker arrives at the hitting spot
-    //    exactly as the ball gets there (both animate over the same 750ms).
-    ctx.phase(5)
+    //    exactly as the ball gets there (both animate over the same 1150ms).
+    ctx.phase(2)
     const hitter = ctx.attackers[hitIndex]
     const hit = ctx.contact[hitIndex]           // at-the-net hitting point for that zone
     ctx.highlight(hitter, true)
@@ -123,13 +123,14 @@ const washAttackBlockDrill = {
     ctx.move(hitter, hit.x, hit.y)               // approach timed to meet the ball there
     await ctx.draw(1150); if (!isRunning()) return
 
-    // 5) ATTACK — contact made, ball driven over the net
+    // 4) ATTACK — contact made, ball driven over the net
+    ctx.phase(3)
     const out = P.attackOut()
     ctx.move(ball, out.x, out.y)
     await ctx.draw(600); if (!isRunning()) return
 
-    // 6) SUBSTITUTION — hitter rotates to the back of the queue, next sub fills in
-    ctx.phase(6)
+    // 5) SUBSTITUTION — hitter rotates to the back of the queue, next sub fills in
+    ctx.phase(4)
     ctx.highlight(hitter, false)
     const newcomer = ctx.subQueue.shift()
     ctx.attackers[hitIndex] = newcomer
