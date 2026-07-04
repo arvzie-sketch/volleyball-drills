@@ -15,15 +15,29 @@ engine.js             DrillContext + DrillPlayer (playback, phase stepping, snap
 vendor/vbCourts.js    patched VBRotations court renderer  (see "Do not modify")
 vendor/snap.svg-min.js  Snap.svg (unmodified upstream)
 drills/*.js           one file per drill; each calls registerDrill({...})
+tools/verify-drill.mjs  headless contract verifier (Node, no browser)
 DRILL-AUTHORING.md    the drill contract — read it before writing any drill code
+.claude/skills/       project workflow skills (e.g. /new-drill)
 ```
 
 ## Adding a new drill
 
+Follow the workflow in [.claude/skills/new-drill/SKILL.md](.claude/skills/new-drill/SKILL.md)
+(the `/new-drill` skill):
+
+1. Research the drill if it's a named one — never guess mechanics or terms.
+2. Propose roster + numbered phases + motion plan and **wait for the user's
+   sign-off before writing any code**.
+3. Build to the contract. Sources: [DRILL-AUTHORING.md](DRILL-AUTHORING.md) plus
+   the reference drill `drills/backrow-attack-rally.js` — those two are
+   sufficient; do NOT explore `engine.js` or the other drills. Needing to
+   means the contract has a gap: fix DRILL-AUTHORING.md in the same commit.
+4. Verify: `node tools/verify-drill.mjs drills/<drill-id>.js` must pass.
+
 A new drill NEVER requires layout, CSS, or engine changes. It is exactly:
 
 1. One new file: `drills/<drill-id>.js`, written to the contract in
-   [DRILL-AUTHORING.md](DRILL-AUTHORING.md) (read it before writing any drill code).
+   [DRILL-AUTHORING.md](DRILL-AUTHORING.md).
 2. One `<script src="drills/<drill-id>.js"></script>` tag in `index.html`,
    next to the other drill script tags (order = picker order).
 

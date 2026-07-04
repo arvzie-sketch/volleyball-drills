@@ -5,6 +5,14 @@ are **fixed by the viewer** and fully data-driven. A new drill is ONE file that
 calls `registerDrill({...})` plus ONE `<script src>` tag. Nothing else changes.
 Give this file to any model/author: they only think about the drill.
 
+**Reference drill: [`drills/backrow-attack-rally.js`](drills/backrow-attack-rally.js).**
+Read it alongside this file — it exercises every pattern below (IIFE scoping,
+carried state across reps, deferred follow-ups, `netSign` mirroring,
+highlight-vs-tint discipline). This file plus that one are **sufficient** to
+write a drill; don't read `engine.js` or the other drills. If you find
+yourself needing to, the contract has a gap — fix THIS file in the same
+commit.
+
 ## File template
 
 ```js
@@ -82,6 +90,46 @@ registerDrill({
 8. Legend colours — stay in this palette so drills look consistent:
    `#efa581` (neutral player), `#e23b2b` (red team role), `#3b5bdb` (blue team
    role), `#5b7fb5` (secondary blue), `#66dd66` (highlighted/active player).
+9. **No dead beats.** The animation must read as continuous — the ball never
+   sits still while something else happens. Simultaneous real-world actions
+   (a substitution during a dig, a setter releasing during a pass) share one
+   `ctx.draw()` instead of playing as sequential pauses; see "Patterns for
+   continuous / multi-touch drills" below.
+
+## Terminology (phase names must use it correctly)
+
+The name of the FIRST contact depends on where the ball came FROM, not on how
+hard the ball is:
+
+- **Pass / reception** — first contact off a **serve**; the player is a
+  "passer". Technique is a forearm pass ("bump").
+- **Dig** — first contact off an **attack** (a hit ball, even a controlled
+  one). Rule of thumb: *you cannot dig a serve nor receive an attack.*
+- **Free-ball pass** — first contact off an easy ball sent over with no
+  attacking swing.
+
+Canonical rally sequence: **serve → pass → set → hit → dig → set → hit → dig …**
+A ball a player sends to the setter just to start a rep is a "toss" or "feed".
+Blocking vocabulary: *read the setter, follow/track the ball, close the block,
+stuff* (a block that rebounds straight down for a point).
+When a term or a drill's mechanics are uncertain, research an authoritative
+source and report back — never guess.
+
+## Verify before committing
+
+```
+node tools/verify-drill.mjs drills/<id>.js    # no args = verify all drills
+```
+
+The harness runs the drill headlessly in Node (no browser): it executes
+`setup → rep × 25 → reset` with a stubbed `ctx`, then replays the rep with
+`isRunning()` flipping false after every draw. It asserts the rules above —
+phase indices valid and called before each phase's moves, an honoured
+`isRunning()` guard after every draw, every position inside the renderable
+area, ball added last, legend palette, no tint+highlight mixing on one
+object, unique kebab-case id, cross-file top-level name collisions, and the
+`<script>` tag present in `index.html`. Fix every failure; justify any
+warning you leave.
 
 ## Wiring it in
 
@@ -123,7 +171,9 @@ Add one line next to the other drills in `index.html` (order = picker order):
 - **`netSign` for mirrored two-sided drills.** Give each half a sign
   (near `-1`, far `+1`) and write movement as `y + netSign * offset`, so one
   code path drives both sides ("toward the net" is `+netSign`).
-- **Verify headlessly.** Stub `ctx` (`player` / `ball` / `move` / `draw` /
-  `phase` / `pick` / `highlight`) in Node and drive `setup → rep × N → reset`,
-  asserting phase order, object counts, loop-seam position, and that every slot
-  stays in-bounds. Catches choreography bugs without opening a browser.
+- **Verify headlessly** with `node tools/verify-drill.mjs drills/<id>.js`
+  (see "Verify before committing" above) — it catches choreography and
+  contract bugs without opening a browser. For seam/choreography assertions
+  beyond the contract (e.g. "the ball ends the rep on the receiver"), extend
+  the drill-specific checks by hand the same way: stub `ctx`, run
+  `setup → rep × N → reset`, assert positions.

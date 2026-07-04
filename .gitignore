@@ -8,3 +8,6 @@ desktop.ini
 
 # Design handoff bundle (reference only; its contents are copied into the repo)
 design_handoff_drill_viewer_1c/
+
+# Claude Code local (per-machine) settings — the skills folder IS committed
+.claude/settings.local.json

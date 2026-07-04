@@ -31,12 +31,12 @@ bottom sheet (mobile); both lists are searchable and grouped by category.
 ```
 index.html                     viewer shell — layout, picker, transport, settings (data-driven)
 engine.js                      DrillPlayer + DrillContext: playback, phase stepping, snapshots, registry
-drills/wash-attack-block.js    Attack drill
-drills/block-close-pin.js      Block drill
-drills/butterfly-serve-pass.js Serve & Pass drill
+drills/*.js                    one file per drill — Attack, Block, Serve & Pass, … (growing)
+tools/verify-drill.mjs         headless drill verifier — asserts the contract in Node, no browser
 vendor/vbCourts.js             VBRotations court renderer (patched: rAF tween replaces Snap.animate)
 vendor/snap.svg-min.js         Snap.svg (unmodified)
 DRILL-AUTHORING.md             the drill contract — read before writing a new drill
+.claude/skills/                Claude Code workflow skills (e.g. /new-drill)
 ```
 
 ## Adding a drill (this is how the attack / block libraries grow)
@@ -47,9 +47,12 @@ whole UI is data-driven from the drill descriptor. The `category` groups it in
 the picker; the `id` is its shareable URL hash (`.../#my-drill`).
 
 The full contract — file template, the `ctx.phase()` / `isRunning()` rules, the
-colour palette, and timing guidance — lives in
-**[DRILL-AUTHORING.md](DRILL-AUTHORING.md)**. Read it before writing drill code.
-In short:
+colour palette, terminology, and timing guidance — lives in
+**[DRILL-AUTHORING.md](DRILL-AUTHORING.md)**. Read it before writing drill code,
+together with the reference drill
+**[drills/backrow-attack-rally.js](drills/backrow-attack-rally.js)** (it
+exercises every pattern: IIFE scoping, carried state, deferred overlapping
+moves, two-sided mirroring). In short:
 
 ```js
 'use strict'
@@ -85,6 +88,46 @@ Then add one line to `index.html` — a `<script src="drills/your-file.js">` tag
 after the other drill scripts (order = picker order). It shows up in the picker
 under its category and gets its own shareable `#id` link. No new pages, no
 duplicated layout.
+
+Before committing, run the headless verifier — it executes the drill in Node
+with a stubbed `ctx` and asserts the whole contract (phase boundaries,
+`isRunning()` guards, renderable bounds, ball-last, palette, wiring, id
+uniqueness, global-name collisions):
+
+```
+node tools/verify-drill.mjs drills/your-file.js    # no args = verify all drills
+```
+
+### With Claude Code
+
+The repo ships a `/new-drill` skill
+([.claude/skills/new-drill/SKILL.md](.claude/skills/new-drill/SKILL.md)) that
+runs the whole workflow: give it a drill name or a rough idea and it researches
+the drill, proposes the roster + numbered phases for your sign-off, and only
+then builds, verifies, wires, and commits the file. You approve the plan and
+correct terminology/choreography — you don't have to write the description
+yourself.
+
+### Adding a workflow skill
+
+Project skills live in `.claude/skills/<skill-name>/SKILL.md`. A skill is a
+markdown playbook with a small YAML frontmatter:
+
+```markdown
+---
+name: my-skill
+description: One or two sentences saying what it does AND when to use it —
+  Claude matches on this to auto-suggest the skill.
+---
+
+# Steps
+1. …the instructions Claude follows when the skill is invoked…
+```
+
+Drop the file in, and it's available as `/my-skill` in Claude Code (and
+auto-invoked when a request matches the description). Keep skills imperative
+and short, and link them to the repo docs (like DRILL-AUTHORING.md) instead of
+duplicating content.
 
 ### Coordinate system (full court)
 
