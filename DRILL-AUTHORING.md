@@ -90,3 +90,40 @@ Add one line next to the other drills in `index.html` (order = picker order):
 ```html
 <script src="drills/my-drill-id.js"></script>
 ```
+
+## Engine facts worth knowing (learned the hard way)
+
+- **Visible area.** The court draws in a 1140×2040 design box with the net at
+  the centre; a player is a 54-unit circle. In drill coordinates that means a
+  player only renders *fully* within about `x ∈ 0..900` and `|y| ≤ 960`. Push
+  off-court queues, coaches, or subs past ~±960 in `y` (or outside x) and they
+  clip at the SVG edge. Subs behind a baseline live around `y = ±945`.
+- **Rewind snapshots capture positions + the highlight set only — never fill.**
+  The engine snapshots every object's position and which objects are highlighted
+  at each `ctx.phase()`, and restores exactly those on step-back/step-forward.
+  It knows nothing about `ctx.tint()` colours. So flash the *active* object with
+  `ctx.highlight()` (rewind-safe) and keep that object at the default fill
+  `#efa581`, so un-highlight restores it (highlight green is `#66dd66`). A flash
+  built from swapping `ctx.tint()` colours will desync when you step back.
+- **Drill files share one global scope.** Two files that both declare
+  `const P = …` at top level collide. If your drill needs private
+  constants/helpers, wrap the whole file in an IIFE: `;(function () { … })()`
+  (call `registerDrill` inside it — it's a global).
+
+## Patterns for continuous / multi-touch drills
+
+- **Seam the loop with carried state.** End each `rep()` with the ball exactly
+  where the next rep expects it, and stash any needed index on `ctx`
+  (e.g. `ctx.recvA`). The rep then reads like the middle of a rally, not a
+  cold start.
+- **Defer a follow-up to kill a dead beat.** If an action (a substitution, a
+  cover) should overlap the *next* beat rather than pause the ball, stash it
+  (e.g. `ctx.pending = {…}`) and apply its `ctx.move`s at the start of the draw
+  it should ride along with. Nothing ever stops.
+- **`netSign` for mirrored two-sided drills.** Give each half a sign
+  (near `-1`, far `+1`) and write movement as `y + netSign * offset`, so one
+  code path drives both sides ("toward the net" is `+netSign`).
+- **Verify headlessly.** Stub `ctx` (`player` / `ball` / `move` / `draw` /
+  `phase` / `pick` / `highlight`) in Node and drive `setup → rep × N → reset`,
+  asserting phase order, object counts, loop-seam position, and that every slot
+  stays in-bounds. Catches choreography bugs without opening a browser.
