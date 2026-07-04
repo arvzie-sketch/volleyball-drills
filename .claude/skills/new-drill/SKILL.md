@@ -1,12 +1,23 @@
 ---
 name: new-drill
-description: Add a new animated volleyball drill to the library. Use whenever the user asks to add, create, or build a drill (e.g. "/new-drill queen of the court", "add a pepper drill"). Researches the drill, proposes roster + phases for sign-off, then writes, verifies, wires, and commits it.
+description: Add a new animated volleyball drill OR warmup routine to the library. Use whenever the user asks to add, create, or build a drill or warmup (e.g. "/new-drill queen of the court", "add a pepper drill", "add a pair passing warmup"). Researches it, proposes the plan for sign-off, then writes, verifies, wires, and commits it.
 ---
 
-# Adding a new drill
+# Adding a new drill or warmup
 
-Follow these steps **in order**. Step 2 is a hard gate — never write drill code
+Follow these steps **in order**. Step 2 is a hard gate — never write code
 before the user approves the plan.
+
+## 0. Triage: animated drill or warmup?
+
+- **Animated drill** — the value is movement/choreography on the court (who
+  runs where, how the ball travels). Follow the steps below.
+- **Warmup (routine)** — the value is a timed sequence of exercises with
+  coaching cues ("pairs, one ball, 1 min each"). Much lighter path: follow
+  [WARMUP-AUTHORING.md](../../../WARMUP-AUTHORING.md) instead — propose the
+  stages + durations + cues for sign-off (step 2 still applies), then write
+  `warmups/<id>.js` (pure data, no engine/UI work), wire its script tag, run
+  the verifier, commit. Steps 1, 2 and 5 below apply as written; skip 3–4.
 
 ## 1. Understand the drill — research, don't guess
 

@@ -35,6 +35,7 @@ import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const DRILLS_DIR = path.join(ROOT, 'drills')
+const WARMUPS_DIR = path.join(ROOT, 'warmups')
 
 const PALETTE = ['#efa581', '#e23b2b', '#3b5bdb', '#5b7fb5', '#66dd66']
 // A player circle (54 units wide) renders fully inside roughly this window of
@@ -42,7 +43,8 @@ const PALETTE = ['#efa581', '#e23b2b', '#3b5bdb', '#5b7fb5', '#66dd66']
 const BOUNDS = { xMin: -90, xMax: 990, yAbs: 960 }
 const REPS = 25
 const ENGINE_GLOBALS = ['clearChildren', 'DrillContext', 'DrillPlayer', 'DRILLS',
-  'registerDrill', 'getDrill', 'drillCategories']
+  'registerDrill', 'getDrill', 'drillCategories',
+  'WARMUPS', 'registerWarmup', 'getWarmup', 'warmupCategories']
 
 /* ------------------------------------------------------------------ report */
 
@@ -190,13 +192,18 @@ class StubCtx {
 
 /* ------------------------------------------------------------ file loading */
 
-function loadDrills (file) {
+function loadFile (file) {
   const src = fs.readFileSync(file, 'utf8')
-  const registered = []
-  const sandbox = { registerDrill: (d) => { registered.push(d); return d }, console }
+  const drills = []
+  const warmups = []
+  const sandbox = {
+    registerDrill: (d) => { drills.push(d); return d },
+    registerWarmup: (w) => { w.kind = 'routine'; warmups.push(w); return w },
+    console
+  }
   vm.createContext(sandbox)
   vm.runInContext(src, sandbox, { filename: file })
-  return registered
+  return { drills, warmups }
 }
 
 function topLevelDecls (src) {
@@ -294,38 +301,79 @@ async function verifyDrill (drill, report) {
   report.stats = { reps: REPS, draws: totalDraws, objects: ctx._objects.length }
 }
 
+/* ----------------------------------------------------------- warmup runner */
+
+function verifyWarmup (w, report) {
+  if (!w.id || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(w.id)) {
+    report.fail(`id "${w.id}" must be stable kebab-case (it is the URL hash)`)
+  }
+  if (!w.category || typeof w.category !== 'string') report.fail('missing category')
+  if (!w.name || typeof w.name !== 'string') report.fail('missing name')
+  if (!w.summary || typeof w.summary !== 'string') report.warn('missing summary')
+  if (w.setupNote != null && typeof w.setupNote !== 'string') report.fail('setupNote must be a string')
+
+  if (!Array.isArray(w.exercises) || w.exercises.length === 0) {
+    report.fail('exercises[] must be a non-empty array of { name, duration, cues[] }')
+    return
+  }
+  w.exercises.forEach((e, i) => {
+    if (!e || typeof e.name !== 'string' || !e.name.trim()) {
+      report.fail(`exercises[${i}]: missing name`)
+      return
+    }
+    if (typeof e.duration !== 'number' || !Number.isFinite(e.duration) || e.duration <= 0) {
+      report.fail(`exercises[${i}] ("${truncate(e.name)}"): duration must be a positive number of seconds`)
+    } else if (e.duration > 1800) {
+      report.warn(`exercises[${i}] ("${truncate(e.name)}"): duration ${e.duration}s is over 30 min — is that intended?`)
+    }
+    if (e.cues != null && (!Array.isArray(e.cues) || e.cues.some((c) => typeof c !== 'string' || !c.trim()))) {
+      report.fail(`exercises[${i}] ("${truncate(e.name)}"): cues must be an array of non-empty strings`)
+    }
+  })
+  report.stats = { exercises: w.exercises.length }
+}
+
 /* ------------------------------------------------------------------- main */
+
+function listDir (dir) {
+  if (!fs.existsSync(dir)) return []
+  return fs.readdirSync(dir).filter((f) => f.endsWith('.js')).map((f) => path.join(dir, f))
+}
+
+function relPath (file) {
+  return path.relative(ROOT, file).split(path.sep).join('/')
+}
 
 async function main () {
   const args = process.argv.slice(2)
-  const allFiles = fs.readdirSync(DRILLS_DIR)
-    .filter((f) => f.endsWith('.js'))
-    .map((f) => path.join(DRILLS_DIR, f))
+  const allFiles = [...listDir(DRILLS_DIR), ...listDir(WARMUPS_DIR)]
   const targets = args.length ? args.map((a) => path.resolve(ROOT, a)) : allFiles
   const indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
 
-  // cross-file maps built from EVERY drill file, so single-file runs still
-  // catch collisions with the rest of the library
+  // cross-file maps built from EVERY drill + warmup file, so single-file runs
+  // still catch collisions with the rest of the library (all these files share
+  // one global scope in the browser)
   const declOwners = new Map()
   const idOwners = new Map()
   for (const f of allFiles) {
     const src = fs.readFileSync(f, 'utf8')
-    const base = path.basename(f)
+    const rel = relPath(f)
     for (const n of topLevelDecls(src)) {
       if (!declOwners.has(n)) declOwners.set(n, [])
-      declOwners.get(n).push(base)
+      declOwners.get(n).push(rel)
     }
     const id = firstIdIn(src)
     if (id) {
       if (!idOwners.has(id)) idOwners.set(id, [])
-      idOwners.get(id).push(base)
+      idOwners.get(id).push(rel)
     }
   }
 
   let anyFailed = false
   for (const file of targets) {
     const base = path.basename(file)
-    const rel = 'drills/' + base
+    const rel = relPath(file)
+    const isWarmupFile = rel.startsWith('warmups/')
     const report = new Report(rel)
 
     if (!fs.existsSync(file)) {
@@ -335,39 +383,47 @@ async function main () {
 
       // statics
       if (!indexHtml.includes(`src="${rel}"`)) {
-        report.fail(`no <script src="${rel}"> tag in index.html — the drill will not load`)
+        report.fail(`no <script src="${rel}"> tag in index.html — it will not load`)
       }
       if (/\bsetTimeout\b|\bsetInterval\b/.test(src)) {
         report.fail('uses setTimeout/setInterval — never hard-code delays outside ctx.draw() (contract rule 7)')
       }
       for (const n of topLevelDecls(src)) {
-        const others = (declOwners.get(n) || []).filter((b) => b !== base)
+        const others = (declOwners.get(n) || []).filter((r) => r !== rel)
         if (others.length) {
-          report.fail(`top-level "${n}" is also declared in ${others.join(', ')} — drill files share ONE browser global scope; wrap the file in an IIFE (see DRILL-AUTHORING.md)`)
+          report.fail(`top-level "${n}" is also declared in ${others.join(', ')} — these files share ONE browser global scope; wrap the file in an IIFE (see DRILL-AUTHORING.md)`)
         }
         if (ENGINE_GLOBALS.includes(n)) {
           report.fail(`top-level "${n}" collides with an engine global`)
         }
       }
 
-      // load + behavioural run
-      let drills = []
+      // load + run
+      let loaded = { drills: [], warmups: [] }
       try {
-        drills = loadDrills(file)
+        loaded = loadFile(file)
       } catch (e) {
         report.fail('file threw while loading: ' + e.message)
       }
-      if (drills.length === 0 && report.failures.size === 0) {
-        report.fail('file never calls registerDrill()')
+      if (isWarmupFile && loaded.drills.length) {
+        report.fail('a file in warmups/ must call registerWarmup(), not registerDrill()')
       }
-      for (const d of drills) {
-        const others = (idOwners.get(d.id) || []).filter((b) => b !== base)
+      if (!isWarmupFile && loaded.warmups.length) {
+        report.fail('a file in drills/ must call registerDrill(), not registerWarmup()')
+      }
+      const items = isWarmupFile ? loaded.warmups : loaded.drills
+      if (items.length === 0 && report.failures.size === 0) {
+        report.fail(`file never calls ${isWarmupFile ? 'registerWarmup()' : 'registerDrill()'}`)
+      }
+      for (const d of items) {
+        const others = (idOwners.get(d.id) || []).filter((r) => r !== rel)
         if (others.length) report.fail(`id "${d.id}" is also used by ${others.join(', ')}`)
-        if (drills.length === 1 && d.id && base !== d.id + '.js') {
-          report.warn(`filename ${base} does not match id "${d.id}" (convention: drills/<id>.js)`)
+        if (items.length === 1 && d.id && base !== d.id + '.js') {
+          report.warn(`filename ${base} does not match id "${d.id}" (convention: <id>.js)`)
         }
         try {
-          await verifyDrill(d, report)
+          if (isWarmupFile) verifyWarmup(d, report)
+          else await verifyDrill(d, report)
         } catch (e) {
           report.fail(`threw at runtime: ${e.message}`)
         }
@@ -377,7 +433,10 @@ async function main () {
     // print
     const status = report.failures.size ? 'FAIL' : 'PASS'
     const s = report.stats
-    console.log(`${status}  ${rel}${s ? `  (${s.objects} objects, ${s.reps} reps, ${s.draws} draws)` : ''}`)
+    const statTxt = !s ? ''
+      : s.exercises != null ? `  (${s.exercises} exercises)`
+        : `  (${s.objects} objects, ${s.reps} reps, ${s.draws} draws)`
+    console.log(`${status}  ${rel}${statTxt}`)
     for (const m of Array.from(report.failures).slice(0, 12)) console.log(`      FAIL  ${m}`)
     if (report.failures.size > 12) console.log(`      … and ${report.failures.size - 12} more failures`)
     for (const m of report.warnings) console.log(`      warn  ${m}`)
@@ -386,7 +445,7 @@ async function main () {
 
   console.log(anyFailed
     ? '\nResult: FAILED — fix the failures above before wiring/committing.'
-    : '\nResult: OK — all checked drills satisfy the contract.')
+    : '\nResult: OK — everything checked satisfies the contract.')
   process.exit(anyFailed ? 1 : 0)
 }
 

@@ -30,14 +30,31 @@ bottom sheet (mobile); both lists are searchable and grouped by category.
 
 ```
 index.html                     viewer shell — layout, picker, transport, settings (data-driven)
-engine.js                      DrillPlayer + DrillContext: playback, phase stepping, snapshots, registry
+engine.js                      DrillPlayer + DrillContext: playback, phase stepping, snapshots, registries
 drills/*.js                    one file per drill — Attack, Block, Serve & Pass, … (growing)
-tools/verify-drill.mjs         headless drill verifier — asserts the contract in Node, no browser
+warmups/*.js                   one file per warmup — timed cue sheets (no animation)
+tools/verify-drill.mjs         headless verifier for drills AND warmups — Node, no browser
 vendor/vbCourts.js             VBRotations court renderer (patched: rAF tween replaces Snap.animate)
 vendor/snap.svg-min.js         Snap.svg (unmodified)
 DRILL-AUTHORING.md             the drill contract — read before writing a new drill
+WARMUP-AUTHORING.md            the warmup contract (much smaller — warmups are pure data)
+backlog.md                     agreed-but-not-built ideas (warmup timer, chime, wake-lock)
 .claude/skills/                Claude Code workflow skills (e.g. /new-drill)
 ```
+
+## Warmups
+
+Next to the animated drills, the picker has a pinned **Warmups** section:
+timed cue sheets for the start of practice ("pairs, one ball per pair —
+pass to each other, 1 min; pass to yourself then to your partner, 1 min; …").
+A warmup shows a card with the current exercise, its coaching cues, and a
+duration chip, plus the full stage list — no court, no animation. Navigate
+stages with ⏮/⏭ or by tapping the list; every warmup has the same shareable
+`#id` deep link as a drill. (A built-in countdown timer is on the backlog —
+for now the clock is the coach's phone.)
+
+Adding one = one pure-data file in `warmups/` + one script tag — see
+**[WARMUP-AUTHORING.md](WARMUP-AUTHORING.md)**.
 
 ## Adding a drill (this is how the attack / block libraries grow)
 

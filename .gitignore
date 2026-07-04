@@ -11,3 +11,6 @@ design_handoff_drill_viewer_1c/
 
 # Claude Code local (per-machine) settings — the skills folder IS committed
 .claude/settings.local.json
+
+#resources should not be committed, as they are downloaded from the web
+resources/

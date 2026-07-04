@@ -102,6 +102,31 @@
     .speed button.on { color: var(--accent-soft); background: var(--raised); }
     .rep { flex: none; font-size: 11px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
 
+    /* warmup (routine) card — shown instead of the court for kind:'routine' */
+    .stage[hidden] { display: none; }
+    .wcard {
+      display: flex; flex-direction: column; gap: 14px; min-height: 280px;
+      border: 1px solid var(--border); border-radius: 14px; background: var(--stage);
+      padding: 20px 20px 14px;
+    }
+    .wcard[hidden] { display: none; }
+    .wcard-top { display: flex; align-items: center; }
+    .wcard-num { font-size: 11px; font-weight: 700; color: var(--accent-soft); font-family: ui-monospace, Menlo, monospace; }
+    .wcard-dur {
+      font-size: 11px; font-weight: 700; color: var(--text2); font-family: ui-monospace, Menlo, monospace;
+      border: 1px solid var(--border2); border-radius: 999px; padding: 4px 10px;
+    }
+    .wcard-name { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
+    .wcard-cues { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .wcard-cues li { position: relative; padding-left: 18px; font-size: 14px; color: var(--text2); line-height: 1.5; }
+    .wcard-cues li::before {
+      content: ''; position: absolute; left: 2px; top: .5em; width: 7px; height: 7px;
+      border-radius: 50%; background: var(--accent);
+    }
+    .wcard-nav { margin-top: auto; display: flex; align-items: center; gap: 12px; padding-top: 10px; }
+    .wcard-nav .segs { flex: 1; margin-bottom: 0; }
+    .wnav[disabled] { opacity: .35; cursor: default; }
+
     /* info column */
     .info { width: 100%; max-width: 440px; margin: 0 auto; border: 1px solid var(--border); border-radius: 14px;
       background: #12171D; padding: 20px 20px 18px; }
@@ -119,7 +144,19 @@
     .ptext { font-size: 13.5px; line-height: 1.5; color: var(--text2); }
     .ptext.done { color: var(--muted); }
     .ptext.active { color: var(--text); font-weight: 600; }
+    .info-setup {
+      margin: 12px 0 0; padding: 8px 12px; border-left: 3px solid var(--accent); border-radius: 6px;
+      background: var(--panel); font-size: 12.5px; color: var(--text2); line-height: 1.5;
+    }
+    .info-setup[hidden] { display: none; }
+    /* warmup exercise rows in the stepper are buttons (tappable) */
+    .wstep { background: none; border: none; width: 100%; cursor: pointer; font-family: inherit; text-align: left; border-radius: 8px; }
+    .wstep:hover { background: #1A222A; }
+    .wstep .pdot { color: var(--muted2); }
+    .wstep .pdot.done { color: #101418; }
+    .wstep .wdur { flex: none; font-size: 11px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; margin-top: 3px; }
     .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; padding-top: 15px; border-top: 1px solid var(--border); }
+    .legend[hidden] { display: none; }
     .legend span.chip { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text2); }
     .legend .ldot { width: 11px; height: 11px; flex: none; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.55); }
 
@@ -223,9 +260,9 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"></path></svg>
         </button>
       </div>
-      <input class="search" id="railSearch" type="search" placeholder="Search drills" autocomplete="off" aria-label="Search drills">
+      <input class="search" id="railSearch" type="search" placeholder="Search drills & warmups" autocomplete="off" aria-label="Search drills and warmups">
       <nav class="drill-list" id="railList" aria-label="Drills"></nav>
-      <div class="rail-foot">Rendered with VBRotations (Apache-2.0). Drop a drill file into <code>drills/</code> and it appears here.</div>
+      <div class="rail-foot">Rendered with VBRotations (Apache-2.0). Drop a drill file into <code>drills/</code> (or a warmup into <code>warmups/</code>) and it appears here.</div>
     </aside>
 
     <!-- ===== main ===== -->
@@ -243,12 +280,28 @@
         <!-- court column -->
         <div class="court-col">
           <button class="pick" id="pickBtn" type="button" aria-haspopup="dialog">
-            <span class="pick-label">Drill</span>
+            <span class="pick-label" id="pickLabel">Drill</span>
             <span class="pick-name" id="pickName">Loading…</span>
             <svg class="pick-caret" viewBox="0 0 12 8" fill="none"><path d="M1 1.5 L6 6.5 L11 1.5" stroke="#5F6B76" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </button>
 
-          <div class="stage">
+          <!-- warmup (routine) card — replaces the court for kind:'routine' -->
+          <div class="wcard" id="wcard" hidden>
+            <div class="wcard-top">
+              <span class="wcard-num" id="wNum"></span>
+              <span class="flex1"></span>
+              <span class="wcard-dur" id="wDur"></span>
+            </div>
+            <h2 class="wcard-name" id="wName"></h2>
+            <ul class="wcard-cues" id="wCues"></ul>
+            <div class="wcard-nav">
+              <button class="tbtn wnav" id="wPrev" type="button" title="Previous exercise" aria-label="Previous exercise">⏮</button>
+              <div class="segs" id="wSegs"></div>
+              <button class="tbtn wnav" id="wNext" type="button" title="Next exercise" aria-label="Next exercise">⏭</button>
+            </div>
+          </div>
+
+          <div class="stage" id="stage">
             <div class="court" id="court"></div>
 
             <div class="ticker" id="ticker" hidden>
@@ -277,6 +330,7 @@
         <section class="info">
           <h1 class="info-name" id="infoName"></h1>
           <p class="info-sum" id="infoSum"></p>
+          <p class="info-setup" id="infoSetup" hidden></p>
           <div class="stepper" id="stepper"></div>
           <div class="legend" id="legend"></div>
         </section>
@@ -288,7 +342,7 @@
   <div class="scrim" id="drillScrim" hidden role="dialog" aria-modal="true" aria-label="Choose a drill">
     <div class="sheet" id="drillSheet">
       <div class="sheet-head">
-        <input class="search" id="sheetSearch" type="search" placeholder="Search drills" autocomplete="off" aria-label="Search drills">
+        <input class="search" id="sheetSearch" type="search" placeholder="Search drills & warmups" autocomplete="off" aria-label="Search drills and warmups">
         <button class="tbtn sheet-close" id="drillSheetClose" type="button" aria-label="Close">✕</button>
       </div>
       <div class="sheet-list" id="sheetList"></div>
@@ -332,6 +386,7 @@
   <script src="drills/block-close-pin.js"></script>
   <script src="drills/block-read-setter.js"></script>
   <script src="drills/butterfly-serve-pass.js"></script>
+  <script src="warmups/pair-pass-set-warmup.js"></script>
   <script>
   'use strict'
   ;(function () {
@@ -355,6 +410,7 @@
       activeSet: [],
       doneMax: -1,
       rep: 0,
+      wIndex: 0,
       speed: 1,
       accent: ACCENTS.indexOf(lsGet(K.accent)) !== -1 ? lsGet(K.accent) : '#34C388',
       courtStyle: (lsGet(K.court) === 'classic' || lsGet(K.court) === 'midnight') ? lsGet(K.court) : 'midnight',
@@ -362,10 +418,12 @@
     }
 
     var $ = function (id) { return document.getElementById(id) }
-    var courtEl = $('court')
-    var pickName = $('pickName')
-    var infoName = $('infoName'), infoSum = $('infoSum')
+    var courtEl = $('court'), stageEl = $('stage')
+    var pickName = $('pickName'), pickLabel = $('pickLabel')
+    var infoName = $('infoName'), infoSum = $('infoSum'), infoSetup = $('infoSetup')
     var stepperEl = $('stepper'), segsEl = $('segs'), legendEl = $('legend')
+    var wcardEl = $('wcard'), wNum = $('wNum'), wDur = $('wDur'), wName = $('wName')
+    var wCues = $('wCues'), wSegs = $('wSegs'), wPrev = $('wPrev'), wNext = $('wNext')
     var tickerEl = $('ticker'), tickerNum = $('tickerNum'), tickerText = $('tickerText')
     var playBtn = $('playBtn'), backBtn = $('backBtn'), fwdBtn = $('fwdBtn'), resetBtn = $('resetBtn')
     var repEl = $('rep'), speedEl = $('speed')
@@ -382,28 +440,46 @@
       return e
     }
 
-    // ---- drill list (shared by the rail and the mobile sheet) ----
-    function buildList (container, query) {
-      var q = (query || '').trim().toLowerCase()
-      container.innerHTML = ''
+    function getItem (id) { return getDrill(id) || getWarmup(id) }
+    function isRoutine () {
+      var it = state.currentId && getItem(state.currentId)
+      return !!(it && it.kind === 'routine')
+    }
+    function fmtDur (s) {
+      if (!s) return ''
+      return s % 60 === 0 ? (s / 60) + ' min' : s + ' s'
+    }
+
+    // ---- drill + warmup list (shared by the rail and the mobile sheet) ----
+    function addRows (container, cats, label, q) {
       var shown = 0
-      drillCategories().forEach(function (cat) {
+      cats.forEach(function (cat) {
+        var head = label ? label + ' · ' + cat.name : cat.name
         var rows = cat.drills.filter(function (d) {
-          return !q || d.name.toLowerCase().indexOf(q) !== -1 || cat.name.toLowerCase().indexOf(q) !== -1
+          return !q || d.name.toLowerCase().indexOf(q) !== -1 || head.toLowerCase().indexOf(q) !== -1
         })
         if (!rows.length) return
-        container.appendChild(el('div', 'cat', cat.name))
+        container.appendChild(el('div', 'cat', head))
         rows.forEach(function (d) {
           shown++
           var row = el('button', 'row' + (d.id === state.currentId ? ' active' : ''))
           row.type = 'button'
           row.appendChild(el('span', 'row-name', d.name))
           row.appendChild(el('span', 'row-dot'))
-          row.addEventListener('click', function () { closeDrillSheet(); selectDrill(d.id, true) })
+          row.addEventListener('click', function () { closeDrillSheet(); selectItem(d.id, true) })
           container.appendChild(row)
         })
       })
-      if (!shown) container.appendChild(el('div', 'empty', 'No drills match “' + query + '”.'))
+      return shown
+    }
+
+    function buildList (container, query) {
+      var q = (query || '').trim().toLowerCase()
+      container.innerHTML = ''
+      // warmups pinned first — practice starts with the warmup
+      var shown = addRows(container, warmupCategories(), 'Warmups', q)
+      shown += addRows(container, drillCategories(), '', q)
+      if (!shown) container.appendChild(el('div', 'empty', 'Nothing matches “' + query + '”.'))
     }
 
     function refreshLists () {
@@ -411,10 +487,12 @@
       if (!$('drillScrim').hidden) buildList(sheetList, sheetSearch.value)
     }
 
-    // ---- info panel ----
+    // ---- info panel (drills) ----
     function renderInfo (drill) {
       infoName.textContent = drill.name
       infoSum.textContent = drill.summary
+      infoSetup.hidden = true
+      legendEl.hidden = false
       legendEl.innerHTML = ''
       ;(drill.legend || []).concat([BALL_LEGEND]).forEach(function (e) {
         var chip = el('span', 'chip')
@@ -423,6 +501,50 @@
         legendEl.appendChild(chip)
       })
       renderPhases()
+    }
+
+    // ---- info panel + card (warmups) ----
+    function renderWarmupInfo (w) {
+      infoName.textContent = w.name
+      infoSum.textContent = w.summary || ''
+      infoSetup.textContent = w.setupNote || ''
+      infoSetup.hidden = !w.setupNote
+      legendEl.innerHTML = ''
+      legendEl.hidden = true
+      segsEl.innerHTML = ''
+      renderWarmup()
+    }
+
+    function renderWarmup () {
+      var w = state.currentId ? getWarmup(state.currentId) : null
+      if (!w) return
+      var ex = w.exercises || []
+      var cur = Math.min(state.wIndex, ex.length - 1)
+
+      stepperEl.innerHTML = ''
+      ex.forEach(function (e, i) {
+        var done = i < cur, active = i === cur
+        var row = el('button', 'pstep wstep')
+        row.type = 'button'
+        var dot = el('span', 'pdot' + (done ? ' done' : (active ? ' active' : '')), done ? '✓' : String(i + 1))
+        var txt = el('span', 'ptext' + (active ? ' active' : (done ? ' done' : '')), e.name)
+        row.appendChild(dot); row.appendChild(txt)
+        row.appendChild(el('span', 'flex1'))
+        row.appendChild(el('span', 'wdur', fmtDur(e.duration)))
+        row.addEventListener('click', function () { state.wIndex = i; renderWarmup() })
+        stepperEl.appendChild(row)
+      })
+
+      var e = ex[cur]
+      wNum.textContent = (cur + 1) + ' / ' + ex.length
+      wDur.textContent = fmtDur(e.duration)
+      wName.textContent = e.name
+      wCues.innerHTML = ''
+      ;(e.cues || []).forEach(function (c) { wCues.appendChild(el('li', null, c)) })
+      wSegs.innerHTML = ''
+      ex.forEach(function (_, i) { wSegs.appendChild(el('div', 'seg' + (i <= cur ? ' on' : ''))) })
+      wPrev.disabled = cur === 0
+      wNext.disabled = cur === ex.length - 1
     }
 
     // ---- phase stepper + progress segments ----
@@ -481,30 +603,43 @@
       renderTicker()
     }
     function onPhase (idx) {
+      if (isRoutine()) return // a paused drill's last callbacks must not touch the warmup view
       state.activeSet = idx || []
       state.doneMax = state.activeSet.length ? Math.min.apply(null, state.activeSet) - 1 : -1
       renderPhases(); renderTicker(); updateBackOpacity()
     }
     function onRep (n) {
+      if (isRoutine()) return
       state.rep = n
       repEl.textContent = 'rep ' + n
       state.activeSet = []; state.doneMax = -1
       renderPhases(); renderTicker(); updateBackOpacity()
     }
 
-    // ---- drill selection ----
-    async function selectDrill (id, updateHash) {
-      var drill = getDrill(id) || DRILLS[0]
-      if (!drill) return
-      state.currentId = drill.id
-      lsSet(K.drill, drill.id)
-      pickName.textContent = drill.name
-      renderInfo(drill)
+    // ---- drill / warmup selection ----
+    async function selectItem (id, updateHash) {
+      var item = getItem(id) || DRILLS[0] || WARMUPS[0]
+      if (!item) return
+      state.currentId = item.id
+      lsSet(K.drill, item.id)
+      pickName.textContent = item.name
+      pickLabel.textContent = item.kind === 'routine' ? 'Warmup' : 'Drill'
       refreshLists()
-      if (updateHash && location.hash.slice(1) !== drill.id) {
-        history.replaceState(null, '', '#' + drill.id)
+      if (updateHash && location.hash.slice(1) !== item.id) {
+        history.replaceState(null, '', '#' + item.id)
       }
-      await runner.load(drill)
+      if (item.kind === 'routine') {
+        if (runner && runner.running) runner.pause()
+        stageEl.hidden = true
+        wcardEl.hidden = false
+        state.wIndex = 0
+        renderWarmupInfo(item)
+      } else {
+        wcardEl.hidden = true
+        stageEl.hidden = false
+        renderInfo(item)
+        await runner.load(item)
+      }
     }
 
     // ---- transport wiring ----
@@ -515,6 +650,15 @@
     fwdBtn.addEventListener('click', function () { if (runner) runner.stepForward() })
     backBtn.addEventListener('click', function () { if (runner) runner.stepBack() })
     resetBtn.addEventListener('click', function () { if (runner) runner.reset() })
+
+    // ---- warmup navigation ----
+    wPrev.addEventListener('click', function () {
+      if (state.wIndex > 0) { state.wIndex--; renderWarmup() }
+    })
+    wNext.addEventListener('click', function () {
+      var w = state.currentId ? getWarmup(state.currentId) : null
+      if (w && state.wIndex < w.exercises.length - 1) { state.wIndex++; renderWarmup() }
+    })
 
     function buildSpeed () {
       speedEl.innerHTML = ''
@@ -593,7 +737,11 @@
           state.courtStyle = o.v
           lsSet(K.court, o.v)
           buildCourtSeg()
-          if (runner) { runner.courtColours = COURTS[o.v]; runner.load(getDrill(state.currentId)) }
+          if (runner) {
+            runner.courtColours = COURTS[o.v]
+            var d = getDrill(state.currentId) // a warmup has no court to redraw
+            if (d) runner.load(d)
+          }
         })
         wrap.appendChild(b)
       })
@@ -612,7 +760,7 @@
     // ---- deep linking ----
     window.addEventListener('hashchange', function () {
       var id = location.hash.slice(1)
-      if (id && (!state.currentId || id !== state.currentId) && getDrill(id)) selectDrill(id, false)
+      if (id && (!state.currentId || id !== state.currentId) && getItem(id)) selectItem(id, false)
     })
 
     // ---- boot ----
@@ -634,9 +782,9 @@
 
       var fromHash = location.hash.slice(1)
       var saved = lsGet(K.drill)
-      var startId = getDrill(fromHash) ? fromHash
-        : (getDrill(saved) ? saved : (DRILLS[0] && DRILLS[0].id))
-      if (startId) selectDrill(startId, true)
+      var startId = getItem(fromHash) ? fromHash
+        : (getItem(saved) ? saved : (DRILLS[0] && DRILLS[0].id))
+      if (startId) selectItem(startId, true)
     }
 
     if (document.readyState === 'loading') {

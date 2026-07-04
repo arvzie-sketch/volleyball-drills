@@ -380,3 +380,30 @@ function drillCategories () {
   }
   return cats
 }
+
+/* Warmup registry — a warmup ("routine") is a timed cue sheet, not an animated
+ * drill: pure data (exercises + cues + durations), no court, no playback.
+ * Same contract shape: one file in warmups/ + one script tag. */
+const WARMUPS = []
+
+function registerWarmup (w) {
+  w.kind = 'routine'
+  WARMUPS.push(w)
+  return w
+}
+
+function getWarmup (id) {
+  return WARMUPS.find(w => w.id === id)
+}
+
+function warmupCategories () {
+  // same { name, drills[] } shape as drillCategories, so list-building
+  // code in the viewer can treat both uniformly
+  const cats = []
+  for (const w of WARMUPS) {
+    let c = cats.find(x => x.name === w.category)
+    if (!c) { c = { name: w.category, drills: [] }; cats.push(c) }
+    c.drills.push(w)
+  }
+  return cats
+}

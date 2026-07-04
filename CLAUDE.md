@@ -15,8 +15,11 @@ engine.js             DrillContext + DrillPlayer (playback, phase stepping, snap
 vendor/vbCourts.js    patched VBRotations court renderer  (see "Do not modify")
 vendor/snap.svg-min.js  Snap.svg (unmodified upstream)
 drills/*.js           one file per drill; each calls registerDrill({...})
-tools/verify-drill.mjs  headless contract verifier (Node, no browser)
+warmups/*.js          one file per warmup (timed cue sheet); calls registerWarmup({...})
+tools/verify-drill.mjs  headless contract verifier for both (Node, no browser)
 DRILL-AUTHORING.md    the drill contract — read it before writing any drill code
+WARMUP-AUTHORING.md   the (much smaller) warmup contract
+backlog.md            agreed-but-not-built ideas (e.g. warmup timer)
 .claude/skills/       project workflow skills (e.g. /new-drill)
 ```
 
@@ -40,6 +43,11 @@ A new drill NEVER requires layout, CSS, or engine changes. It is exactly:
    [DRILL-AUTHORING.md](DRILL-AUTHORING.md).
 2. One `<script src="drills/<drill-id>.js"></script>` tag in `index.html`,
    next to the other drill script tags (order = picker order).
+
+**Warmups** (timed cue sheets — no animation, no court) follow the same
+one-file-plus-one-tag shape but live in `warmups/` and follow
+[WARMUP-AUTHORING.md](WARMUP-AUTHORING.md). The `/new-drill` skill triages
+between the two. Same verifier covers both.
 
 The viewer UI (picker, phase stepper, transport with phase step-forward/back,
 on-court ticker, legend, mobile layout) is fully data-driven from the
