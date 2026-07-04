@@ -3,6 +3,9 @@
 Animated volleyball drills rendered on top of the
 [VBRotations](https://github.com/monkeysppp/VBRotations) engine (Apache-2.0).
 
+Try out
+[Volleyball Drills](https://arvzie-sketch.github.io/volleyball-drills/#wash-attack-block) here
+
 ## Run it
 
 Just open `index.html` in a browser — everything is plain `<script>` tags, so it
